@@ -30,14 +30,21 @@ src/
 │  ├─ page.tsx                # 渲染 <ChatWorkspace />
 │  └─ globals.css             # 全局样式
 ├─ components/
-│  ├─ chat-workspace.tsx      # 整体布局:对话面板 + 分栏 + 工作区(桌面/移动端)
-│  └─ artifact-workspace.tsx  # Artifact 工作区:预览 iframe + prism 代码视图
+│  ├─ chat-workspace.tsx       # 整体布局:对话面板 + 分栏 + 工作区(桌面/移动端)
+│  ├─ artifact-workspace.tsx   # 工作区外壳:顶栏 + 预览/代码切换,编排下面两个面板
+│  ├─ artifact-preview.tsx     # 预览面板:地址栏 + 刷新/新窗口 + iframe
+│  ├─ artifact-code.tsx        # 代码面板:文件切换 + 复制 + prism 高亮
+│  └─ artifact-icon-button.tsx # 共享的图标按钮(带 Tooltip)
 ├─ hooks/
-│  └─ use-artifact.tsx        # 面板开关 + 当前 artifact 的状态(Context + hook)
+│  └─ use-artifact.tsx         # 面板开关 + 当前 artifact 的状态(Context + hook)
 └─ lib/
-   ├─ artifact.ts             # WebArtifact 数据模型 + toFiles()
-   ├─ build-preview.ts        # 把 { html, css, js } 装配成预览文档
-   └─ sample-artifact.ts      # 样例 artifact 数据
+   ├─ artifact.ts              # WebArtifact 数据模型 + toFiles()
+   ├─ build-preview.ts         # 把 { html, css, js } 装配成预览文档
+   ├─ sample-artifact.ts       # 样例 artifact(组装下面三段源码)
+   └─ sample/
+      ├─ focus-html.ts         # 样例页面 HTML
+      ├─ focus-css.ts          # 样例页面 CSS
+      └─ focus-js.ts           # 样例页面 JS
 ```
 
 ## 数据模型
@@ -55,7 +62,7 @@ type WebArtifact = {
 
 `buildPreviewDocument()` 采用**注入式**装配:把 `<style>` 注入到 `</head>` 前、`<script>` 注入到 `</body>` 前(并转义内联脚本里的 `</script>`)。因此 `html` 字段无需自己引用样式/脚本文件。
 
-要换预览内容,改 [`src/lib/sample-artifact.ts`](src/lib/sample-artifact.ts) 即可。
+要换预览内容,改 [`src/lib/sample/`](src/lib/sample) 下的 `focus-html.ts` / `focus-css.ts` / `focus-js.ts`;[`sample-artifact.ts`](src/lib/sample-artifact.ts) 只负责把它们组装成一个 `WebArtifact`。
 
 ## 说明 / 边界
 
