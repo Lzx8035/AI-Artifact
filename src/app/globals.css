@@ -1,0 +1,36 @@
+@import "@heroui/react/styles";
+
+:root {
+  --background: #ffffff;
+  --foreground: #18181b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: Arial, "Helvetica Neue", "PingFang SC", "Microsoft YaHei",
+    sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
