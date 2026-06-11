@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, Copy, Globe, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "@heroui/react";
 import {
@@ -32,29 +32,6 @@ function useBundlerReady() {
   }, [listen]);
 
   return ready;
-}
-
-/**
- * Sandpack 的重编译只发给已就绪的客户端,首次打包期间的编辑会被
- * 静默丢弃。这里在切回预览视图时把当前文件重新推一次,保证预览
- * 总是渲染最新代码。首次打包完成前不做任何干预(避免影响初始加载)。
- */
-function SyncPreviewOnView({ view }: { view: View }) {
-  const { sandpack } = useSandpack();
-  const ready = useBundlerReady();
-  const prevViewRef = useRef(view);
-
-  useEffect(() => {
-    if (ready && prevViewRef.current !== view && view === "preview") {
-      const file = sandpack.files[sandpack.activeFile];
-      if (file) {
-        sandpack.updateFile(sandpack.activeFile, file.code);
-      }
-    }
-    prevViewRef.current = view;
-  }, [view, sandpack, ready]);
-
-  return null;
 }
 
 /** 首次打包完成前盖在预览上方的加载态。 */
@@ -176,7 +153,19 @@ export function ArtifactReact({
   artifact: ReactArtifact;
   view: View;
 }) {
-  const visibleFiles = Object.keys(artifact.files);
+  // SandpackProvider 内部用「props 身份比较」决定是否整体重置文件状态
+  // (dist 的 useFiles effect 依赖 [props.files, props.customSetup, props.template])。
+  // 这两个 props 必须 memoize,否则本组件任何一次重渲染(如切换视图)
+  // 都会把用户在编辑器里的修改抹掉。
+  const customSetup = useMemo(
+    () => ({ dependencies: artifact.dependencies }),
+    [artifact.dependencies],
+  );
+  const options = useMemo(() => {
+    const visibleFiles = Object.keys(artifact.files);
+    return { activeFile: visibleFiles[0], visibleFiles };
+  }, [artifact.files]);
+
   // 代码面板首次切换到时才挂载,之后保持挂载(同 artifact-workspace 的做法)。
   const [hasVisitedCode, setHasVisitedCode] = useState(false);
   if (view === "code" && !hasVisitedCode) {
@@ -186,13 +175,12 @@ export function ArtifactReact({
   return (
     <div className="artifact-react h-full min-h-0">
       <SandpackProvider
-        customSetup={{ dependencies: artifact.dependencies }}
+        customSetup={customSetup}
         files={artifact.files}
-        options={{ activeFile: visibleFiles[0], visibleFiles }}
+        options={options}
         template="react"
         theme="light"
       >
-        <SyncPreviewOnView view={view} />
         <div
           className={
             view === "preview" ? "flex h-full min-h-0 flex-col" : "hidden"
