@@ -13,7 +13,7 @@ import {
 } from "@codesandbox/sandpack-react";
 
 import type { ReactArtifact } from "@/lib/artifact";
-import { IconButton } from "@/components/artifact-icon-button";
+import { IconButton } from "@/components/artifact/icon-button";
 
 type View = "preview" | "code";
 
@@ -146,7 +146,7 @@ function FileTabs() {
   );
 }
 
-export function ArtifactReact({
+export function ReactPanes({
   artifact,
   view,
 }: {

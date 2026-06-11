@@ -6,10 +6,10 @@ import { FileCode2, X } from "lucide-react";
 import { toFiles } from "@/lib/artifact";
 import { buildPreviewDocument } from "@/lib/build-preview";
 import { useArtifact } from "@/hooks/use-artifact";
-import { IconButton } from "@/components/artifact-icon-button";
-import { ArtifactPreview } from "@/components/artifact-preview";
-import { ArtifactCode } from "@/components/artifact-code";
-import { ArtifactReact } from "@/components/artifact-react";
+import { IconButton } from "@/components/artifact/icon-button";
+import { HtmlPreview } from "@/components/artifact/html/preview";
+import { HtmlCode } from "@/components/artifact/html/code";
+import { ReactPanes } from "@/components/artifact/react/panes";
 
 type View = "preview" | "code";
 
@@ -60,11 +60,11 @@ export function ArtifactWorkspace() {
   }
 
   const files = useMemo(
-    () => (artifact?.kind === "web" ? toFiles(artifact) : []),
+    () => (artifact?.kind === "html" ? toFiles(artifact) : []),
     [artifact],
   );
   const previewDocument = useMemo(
-    () => (artifact?.kind === "web" ? buildPreviewDocument(artifact) : ""),
+    () => (artifact?.kind === "html" ? buildPreviewDocument(artifact) : ""),
     [artifact],
   );
 
@@ -85,7 +85,7 @@ export function ArtifactWorkspace() {
               {artifact.title}
             </p>
             <p className="hidden text-[11px] leading-tight text-zinc-400 sm:block">
-              {artifact.kind === "web" ? "静态 HTML 预览" : "React · Sandpack"}
+              {artifact.kind === "html" ? "静态 HTML 预览" : "React · Sandpack"}
             </p>
           </div>
         </div>
@@ -100,19 +100,19 @@ export function ArtifactWorkspace() {
       </header>
 
       <div className="min-h-0 flex-1">
-        {artifact.kind === "web" ? (
+        {artifact.kind === "html" ? (
           <>
-            <ArtifactPreview
+            <HtmlPreview
               hidden={view !== "preview"}
               previewDocument={previewDocument}
               title={artifact.title}
             />
             {hasVisitedCode || view === "code" ? (
-              <ArtifactCode files={files} hidden={view !== "code"} />
+              <HtmlCode files={files} hidden={view !== "code"} />
             ) : null}
           </>
         ) : (
-          <ArtifactReact artifact={artifact} view={view} />
+          <ReactPanes artifact={artifact} view={view} />
         )}
       </div>
     </section>

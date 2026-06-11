@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { ExternalLink, Globe, RefreshCw } from "lucide-react";
 
-import { IconButton } from "@/components/artifact-icon-button";
+import { IconButton } from "@/components/artifact/icon-button";
 
-export function ArtifactPreview({
+export function HtmlPreview({
   previewDocument,
   title,
   hidden,

@@ -6,7 +6,7 @@ import { toast } from "@heroui/react";
 import { Highlight, themes } from "prism-react-renderer";
 
 import type { ArtifactFile } from "@/lib/artifact";
-import { IconButton } from "@/components/artifact-icon-button";
+import { IconButton } from "@/components/artifact/icon-button";
 
 function CopyButton({ file }: { file: ArtifactFile }) {
   const [copied, setCopied] = useState(false);
@@ -64,7 +64,7 @@ function CodeView({ file }: { file: ArtifactFile }) {
   );
 }
 
-export function ArtifactCode({
+export function HtmlCode({
   files,
   hidden,
 }: {

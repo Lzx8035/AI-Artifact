@@ -11,18 +11,13 @@ import {
   Sparkles,
   User,
 } from "lucide-react";
-import {
-  Button,
-  ScrollShadow,
-  TextArea,
-  ToastProvider,
-} from "@heroui/react";
+import { Button, ScrollShadow, TextArea, ToastProvider } from "@heroui/react";
 import { Group, Panel, Separator } from "react-resizable-panels";
 
-import { ArtifactWorkspace } from "@/components/artifact-workspace";
+import { ArtifactWorkspace } from "@/components/artifact/workspace";
 import { ArtifactProvider, useArtifact } from "@/hooks/use-artifact";
 import { useIsDesktop } from "@/hooks/use-is-desktop";
-import { sampleArtifact } from "@/lib/sample-artifact";
+import { sampleHtmlArtifact } from "@/lib/sample/html-demo";
 import { sampleReactArtifact } from "@/lib/sample/react-demo";
 
 function ChatPanel() {
@@ -70,8 +65,8 @@ function ChatPanel() {
             <div className="min-w-0 flex-1">
               <div className="flex flex-col gap-3 text-[15px] leading-7 text-zinc-700">
                 <p>
-                  已经为你生成了一个静态产品介绍页。页面使用原生 HTML、CSS
-                  和 JavaScript，可以直接预览并查看每个文件。
+                  已经为你生成了一个静态产品介绍页。页面使用原生 HTML、CSS 和
+                  JavaScript，可以直接预览并查看每个文件。
                 </p>
                 <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
                   <div className="flex items-center gap-3 border-b border-zinc-100 px-4 py-3">
@@ -80,7 +75,7 @@ function ChatPanel() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-zinc-950">
-                        {sampleArtifact.title}
+                        {sampleHtmlArtifact.title}
                       </p>
                       <p className="text-xs text-zinc-500">
                         HTML · CSS · JavaScript
@@ -88,7 +83,7 @@ function ChatPanel() {
                     </div>
                     <button
                       className="inline-flex shrink-0 cursor-pointer items-center gap-1 text-sm font-medium text-zinc-900 transition-colors hover:text-zinc-600"
-                      onClick={() => open(sampleArtifact)}
+                      onClick={() => open(sampleHtmlArtifact)}
                       type="button"
                     >
                       查看代码
@@ -125,7 +120,8 @@ function ChatPanel() {
               <div className="flex flex-col gap-3 text-[15px] leading-7 text-zinc-700">
                 <p>
                   这次是一个 React 组件，通过 Sandpack 真实打包运行，安装了
-                  canvas-confetti 这个 npm 依赖。代码可以直接编辑，预览会实时热更新。
+                  canvas-confetti 这个 npm
+                  依赖。代码可以直接编辑，预览会实时热更新。
                 </p>
                 <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
                   <div className="flex items-center gap-3 border-b border-zinc-100 px-4 py-3">

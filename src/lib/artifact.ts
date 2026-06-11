@@ -1,5 +1,5 @@
-export type WebArtifact = {
-  kind: "web";
+export type HtmlArtifact = {
+  kind: "html";
   title: string;
   html: string;
   css: string;
@@ -13,7 +13,7 @@ export type ReactArtifact = {
   dependencies?: Record<string, string>;
 };
 
-export type Artifact = WebArtifact | ReactArtifact;
+export type Artifact = HtmlArtifact | ReactArtifact;
 
 export type ArtifactLanguage = "markup" | "css" | "javascript";
 
@@ -23,7 +23,7 @@ export type ArtifactFile = {
   code: string;
 };
 
-export function toFiles(artifact: WebArtifact): ArtifactFile[] {
+export function toFiles(artifact: HtmlArtifact): ArtifactFile[] {
   return [
     { name: "index.html", language: "markup", code: artifact.html },
     { name: "styles.css", language: "css", code: artifact.css },

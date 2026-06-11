@@ -1,4 +1,4 @@
-import type { WebArtifact } from "@/lib/artifact";
+import type { HtmlArtifact } from "@/lib/artifact";
 
 /**
  * 把 { html, css, js } 装配成单个可预览的 HTML 文档。
@@ -8,7 +8,7 @@ import type { WebArtifact } from "@/lib/artifact";
  *   - <style> 注入到 </head> 前(没有 </head> 就前置到文档最前)
  *   - <script> 注入到 </body> 前(没有 </body> 就追加到文档末尾)
  */
-export function buildPreviewDocument(artifact: WebArtifact): string {
+export function buildPreviewDocument(artifact: HtmlArtifact): string {
   const { html, css, js } = artifact;
 
   // 防止内联脚本里的 </script> 提前闭合外层 <script> 标签。
