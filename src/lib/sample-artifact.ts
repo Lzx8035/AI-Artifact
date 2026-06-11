@@ -4,6 +4,7 @@ import { focusCss } from "@/lib/sample/focus-css";
 import { focusJs } from "@/lib/sample/focus-js";
 
 export const sampleArtifact: WebArtifact = {
+  kind: "web",
   title: "产品介绍页",
   html: focusHtml,
   css: focusCss,

@@ -9,6 +9,7 @@ import { useArtifact } from "@/hooks/use-artifact";
 import { IconButton } from "@/components/artifact-icon-button";
 import { ArtifactPreview } from "@/components/artifact-preview";
 import { ArtifactCode } from "@/components/artifact-code";
+import { ArtifactReact } from "@/components/artifact-react";
 
 type View = "preview" | "code";
 
@@ -51,10 +52,19 @@ function SegmentedToggle({
 export function ArtifactWorkspace() {
   const { artifact, close } = useArtifact();
   const [view, setView] = useState<View>("preview");
+  // 代码面板首次切换到时才挂载,之后保持挂载(隐藏)。避免在 display:none
+  // 里挂载 Tooltip 触发器(react-aria 会告警),也保住编辑器状态。
+  const [hasVisitedCode, setHasVisitedCode] = useState(false);
+  if (view === "code" && !hasVisitedCode) {
+    setHasVisitedCode(true);
+  }
 
-  const files = useMemo(() => (artifact ? toFiles(artifact) : []), [artifact]);
+  const files = useMemo(
+    () => (artifact?.kind === "web" ? toFiles(artifact) : []),
+    [artifact],
+  );
   const previewDocument = useMemo(
-    () => (artifact ? buildPreviewDocument(artifact) : ""),
+    () => (artifact?.kind === "web" ? buildPreviewDocument(artifact) : ""),
     [artifact],
   );
 
@@ -70,9 +80,14 @@ export function ArtifactWorkspace() {
       <header className="flex h-12 shrink-0 items-center gap-3 border-b border-zinc-200 px-3">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <FileCode2 aria-hidden="true" className="size-4 shrink-0 text-zinc-400" />
-          <p className="truncate text-sm font-medium text-zinc-950">
-            {artifact.title}
-          </p>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-zinc-950">
+              {artifact.title}
+            </p>
+            <p className="hidden text-[11px] leading-tight text-zinc-400 sm:block">
+              {artifact.kind === "web" ? "静态 HTML 预览" : "React · Sandpack"}
+            </p>
+          </div>
         </div>
 
         <SegmentedToggle onChange={setView} value={view} />
@@ -85,12 +100,20 @@ export function ArtifactWorkspace() {
       </header>
 
       <div className="min-h-0 flex-1">
-        <ArtifactPreview
-          hidden={view !== "preview"}
-          previewDocument={previewDocument}
-          title={artifact.title}
-        />
-        <ArtifactCode files={files} hidden={view !== "code"} />
+        {artifact.kind === "web" ? (
+          <>
+            <ArtifactPreview
+              hidden={view !== "preview"}
+              previewDocument={previewDocument}
+              title={artifact.title}
+            />
+            {hasVisitedCode || view === "code" ? (
+              <ArtifactCode files={files} hidden={view !== "code"} />
+            ) : null}
+          </>
+        ) : (
+          <ArtifactReact artifact={artifact} view={view} />
+        )}
       </div>
     </section>
   );

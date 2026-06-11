@@ -9,22 +9,22 @@ import {
   type ReactNode,
 } from "react";
 
-import type { WebArtifact } from "@/lib/artifact";
+import type { Artifact } from "@/lib/artifact";
 
 type ArtifactContextValue = {
-  artifact: WebArtifact | null;
+  artifact: Artifact | null;
   isOpen: boolean;
-  open: (artifact: WebArtifact) => void;
+  open: (artifact: Artifact) => void;
   close: () => void;
 };
 
 const ArtifactContext = createContext<ArtifactContextValue | null>(null);
 
 export function ArtifactProvider({ children }: { children: ReactNode }) {
-  const [artifact, setArtifact] = useState<WebArtifact | null>(null);
+  const [artifact, setArtifact] = useState<Artifact | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
-  const open = useCallback((next: WebArtifact) => {
+  const open = useCallback((next: Artifact) => {
     setArtifact(next);
     setIsOpen(true);
   }, []);

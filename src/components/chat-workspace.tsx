@@ -2,6 +2,7 @@
 
 import {
   ArrowUp,
+  Atom,
   Bot,
   ChevronRight,
   Code2,
@@ -20,7 +21,9 @@ import { Group, Panel, Separator } from "react-resizable-panels";
 
 import { ArtifactWorkspace } from "@/components/artifact-workspace";
 import { ArtifactProvider, useArtifact } from "@/hooks/use-artifact";
+import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { sampleArtifact } from "@/lib/sample-artifact";
+import { sampleReactArtifact } from "@/lib/sample/react-demo";
 
 function ChatPanel() {
   const { open } = useArtifact();
@@ -105,6 +108,57 @@ function ChatPanel() {
             </div>
           </div>
 
+          <div className="flex justify-end gap-3">
+            <div className="max-w-[82%] rounded-2xl rounded-tr-md bg-zinc-100 px-4 py-3 text-[15px] leading-6 text-zinc-900">
+              再来一个 React 版本的试试，要用到 npm 依赖。
+            </div>
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white">
+              <User aria-hidden="true" className="size-4" />
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-sm">
+              <Sparkles aria-hidden="true" className="size-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-col gap-3 text-[15px] leading-7 text-zinc-700">
+                <p>
+                  这次是一个 React 组件，通过 Sandpack 真实打包运行，安装了
+                  canvas-confetti 这个 npm 依赖。代码可以直接编辑，预览会实时热更新。
+                </p>
+                <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
+                  <div className="flex items-center gap-3 border-b border-zinc-100 px-4 py-3">
+                    <div className="flex size-9 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700">
+                      <Atom aria-hidden="true" className="size-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-zinc-950">
+                        {sampleReactArtifact.title}
+                      </p>
+                      <p className="text-xs text-zinc-500">
+                        React · canvas-confetti
+                      </p>
+                    </div>
+                    <button
+                      className="inline-flex shrink-0 cursor-pointer items-center gap-1 text-sm font-medium text-zinc-900 transition-colors hover:text-zinc-600"
+                      onClick={() => open(sampleReactArtifact)}
+                      type="button"
+                    >
+                      打开预览
+                      <ChevronRight aria-hidden="true" className="size-4" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
+                    <span>App.js</span>
+                    <span>styles.css</span>
+                    <span>package.json</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="flex gap-3">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-sm">
               <Bot aria-hidden="true" className="size-4" />
@@ -144,13 +198,16 @@ function ChatPanel() {
 
 function WorkspaceLayout() {
   const { isOpen } = useArtifact();
+  // 工作区(尤其 react kind 的 Sandpack 实例)较重,按断点只挂载一份;
+  // ChatPanel 保持双挂载(成本低,且 SSR 渲染稳定)。
+  const isDesktop = useIsDesktop();
 
   return (
     <main className="h-dvh min-h-[560px] overflow-hidden bg-white text-zinc-950">
       <ToastProvider placement="bottom end" />
 
       <div className="hidden h-full md:block">
-        {isOpen ? (
+        {isOpen && isDesktop ? (
           <Group
             className="h-full"
             defaultLayout={{ artifact: 58, chat: 42 }}
@@ -174,7 +231,7 @@ function WorkspaceLayout() {
 
       <div className="h-full md:hidden">
         <ChatPanel />
-        {isOpen ? (
+        {isOpen && !isDesktop ? (
           <div className="fixed inset-0 z-50 bg-white">
             <ArtifactWorkspace />
           </div>

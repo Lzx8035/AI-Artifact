@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Tooltip } from "@heroui/react";
+import { Button, Tooltip } from "@heroui/react";
 
 export function IconButton({
   label,
@@ -17,14 +17,16 @@ export function IconButton({
   return (
     <Tooltip>
       <Tooltip.Trigger>
-        <button
+        <Button
           aria-label={label}
-          className="grid size-8 shrink-0 place-items-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 active:bg-zinc-200"
-          onClick={onPress}
-          type="button"
+          className="size-8 min-w-0 shrink-0 rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+          isIconOnly
+          onPress={onPress}
+          size="sm"
+          variant="ghost"
         >
           {children}
-        </button>
+        </Button>
       </Tooltip.Trigger>
       <Tooltip.Content>{tooltip}</Tooltip.Content>
     </Tooltip>
