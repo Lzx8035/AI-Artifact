@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, File } from "lucide-react";
 import { toast } from "@heroui/react";
 import { Highlight, themes } from "prism-react-renderer";
 
 import type { ArtifactFile } from "@/lib/artifact";
 import { IconButton } from "@/components/artifact/icon-button";
+import { FileTreeToggle } from "@/components/artifact/file-tree-toggle";
 
 function CopyButton({ file }: { file: ArtifactFile }) {
   const [copied, setCopied] = useState(false);
@@ -34,6 +35,41 @@ function CopyButton({ file }: { file: ArtifactFile }) {
         <Copy aria-hidden="true" className="size-4" />
       )}
     </IconButton>
+  );
+}
+
+/** 左侧文件列表,样式对齐 react 档的 Sandpack 文件树(蓝色激活/灰色默认)。 */
+function FileList({
+  files,
+  activeName,
+  onSelect,
+}: {
+  files: ArtifactFile[];
+  activeName: string;
+  onSelect: (name: string) => void;
+}) {
+  return (
+    <div className="w-44 shrink-0 overflow-y-auto border-r border-zinc-200 py-2">
+      {files.map((file) => {
+        const active = file.name === activeName;
+        return (
+          <button
+            aria-pressed={active}
+            className={`flex w-full items-center gap-1.5 px-3 py-1 text-left text-xs transition-colors ${
+              active
+                ? "text-[#3973e0]"
+                : "text-[#808080] hover:text-zinc-900"
+            }`}
+            key={file.name}
+            onClick={() => onSelect(file.name)}
+            type="button"
+          >
+            <File aria-hidden="true" className="size-4 shrink-0" />
+            {file.name}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -67,9 +103,13 @@ function CodeView({ file }: { file: ArtifactFile }) {
 export function HtmlCode({
   files,
   hidden,
+  showFileTree,
+  onToggleFileTree,
 }: {
   files: ArtifactFile[];
   hidden: boolean;
+  showFileTree: boolean;
+  onToggleFileTree: () => void;
 }) {
   const [activeFileName, setActiveFileName] = useState("index.html");
   const activeFile =
@@ -82,27 +122,25 @@ export function HtmlCode({
   return (
     <div className={hidden ? "hidden" : "flex h-full min-h-0 flex-col"}>
       <div className="flex h-9 shrink-0 items-center justify-between border-b border-zinc-200 bg-zinc-50 px-2">
-        <div className="flex items-center gap-0.5">
-          {files.map((file) => (
-            <button
-              aria-pressed={file.name === activeFile.name}
-              className={`rounded-md px-2.5 py-1 font-mono text-xs transition-colors ${
-                file.name === activeFile.name
-                  ? "bg-white text-zinc-950 shadow-sm"
-                  : "text-zinc-500 hover:text-zinc-900"
-              }`}
-              key={file.name}
-              onClick={() => setActiveFileName(file.name)}
-              type="button"
-            >
-              {file.name}
-            </button>
-          ))}
+        <div className="flex min-w-0 items-center gap-1">
+          <FileTreeToggle onToggle={onToggleFileTree} show={showFileTree} />
+          <span className="truncate px-1 font-mono text-xs text-zinc-500">
+            {activeFile.name}
+          </span>
         </div>
         <CopyButton file={activeFile} />
       </div>
-      <div className="min-h-0 flex-1">
-        <CodeView file={activeFile} />
+      <div className="flex min-h-0 flex-1">
+        {showFileTree ? (
+          <FileList
+            activeName={activeFile.name}
+            files={files}
+            onSelect={setActiveFileName}
+          />
+        ) : null}
+        <div className="min-h-0 flex-1">
+          <CodeView file={activeFile} />
+        </div>
       </div>
     </div>
   );

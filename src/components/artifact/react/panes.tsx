@@ -15,6 +15,7 @@ import {
 
 import type { ReactArtifact } from "@/lib/artifact";
 import { IconButton } from "@/components/artifact/icon-button";
+import { FileTreeToggle } from "@/components/artifact/file-tree-toggle";
 
 type View = "preview" | "code";
 
@@ -137,9 +138,13 @@ function ActiveFilePath() {
 export function ReactPanes({
   artifact,
   view,
+  showFileTree,
+  onToggleFileTree,
 }: {
   artifact: ReactArtifact;
   view: View;
+  showFileTree: boolean;
+  onToggleFileTree: () => void;
 }) {
   // SandpackProvider 内部用「props 身份比较」决定是否整体重置文件状态
   // (dist 的 useFiles effect 依赖 [props.files, props.customSetup, props.template])。
@@ -197,13 +202,18 @@ export function ReactPanes({
             }
           >
             <div className="flex h-9 shrink-0 items-center justify-between border-b border-zinc-200 bg-zinc-50 px-2">
-              <ActiveFilePath />
+              <div className="flex min-w-0 items-center gap-1">
+                <FileTreeToggle onToggle={onToggleFileTree} show={showFileTree} />
+                <ActiveFilePath />
+              </div>
               <SandpackCopyButton />
             </div>
             <div className="flex min-h-0 flex-1">
               <SandpackFileExplorer
                 autoHiddenFiles
-                className="w-44 shrink-0 border-r border-zinc-200"
+                className={`w-44 shrink-0 border-r border-zinc-200 ${
+                  showFileTree ? "" : "artifact-tree-hidden"
+                }`}
               />
               <div className="min-h-0 flex-1">
                 <SandpackCodeEditor

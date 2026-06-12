@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FileCode2, X } from "lucide-react";
 
 import { toFiles } from "@/lib/artifact";
@@ -59,6 +59,19 @@ export function ArtifactWorkspace() {
     setHasVisitedCode(true);
   }
 
+  // 文件列表开关:⌘B / Ctrl+B 切换(仿 VS Code),两种 kind 共用。
+  const [showFileTree, setShowFileTree] = useState(true);
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "b") {
+        event.preventDefault();
+        setShowFileTree((current) => !current);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   const files = useMemo(
     () => (artifact?.kind === "html" ? toFiles(artifact) : []),
     [artifact],
@@ -108,11 +121,21 @@ export function ArtifactWorkspace() {
               title={artifact.title}
             />
             {hasVisitedCode || view === "code" ? (
-              <HtmlCode files={files} hidden={view !== "code"} />
+              <HtmlCode
+                files={files}
+                hidden={view !== "code"}
+                onToggleFileTree={() => setShowFileTree((c) => !c)}
+                showFileTree={showFileTree}
+              />
             ) : null}
           </>
         ) : (
-          <ReactPanes artifact={artifact} view={view} />
+          <ReactPanes
+            artifact={artifact}
+            onToggleFileTree={() => setShowFileTree((c) => !c)}
+            showFileTree={showFileTree}
+            view={view}
+          />
         )}
       </div>
     </section>
