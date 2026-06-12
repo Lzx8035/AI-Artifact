@@ -8,6 +8,13 @@ import { Highlight, themes } from "prism-react-renderer";
 import type { ArtifactFile } from "@/lib/artifact";
 import { IconButton } from "@/components/artifact/icon-button";
 import { FileTreeToggle } from "@/components/artifact/file-tree-toggle";
+import { DiffToggle } from "@/components/artifact/diff-toggle";
+import { DiffView } from "@/components/artifact/diff-view";
+
+type HtmlDiff = {
+  oldFiles: Record<string, string>;
+  newFiles: Record<string, string>;
+};
 
 function CopyButton({ file }: { file: ArtifactFile }) {
   const [copied, setCopied] = useState(false);
@@ -105,15 +112,22 @@ export function HtmlCode({
   hidden,
   showFileTree,
   onToggleFileTree,
+  diff,
+  showDiff,
+  onToggleDiff,
 }: {
   files: ArtifactFile[];
   hidden: boolean;
   showFileTree: boolean;
   onToggleFileTree: () => void;
+  diff: HtmlDiff | null;
+  showDiff: boolean;
+  onToggleDiff: () => void;
 }) {
   const [activeFileName, setActiveFileName] = useState("index.html");
   const activeFile =
     files.find((file) => file.name === activeFileName) ?? files[0];
+  const diffActive = showDiff && diff !== null;
 
   if (!activeFile) {
     return null;
@@ -125,23 +139,38 @@ export function HtmlCode({
         <div className="flex min-w-0 items-center gap-1">
           <FileTreeToggle onToggle={onToggleFileTree} show={showFileTree} />
           <span className="truncate px-1 font-mono text-xs text-zinc-500">
-            {activeFile.name}
+            {diffActive ? "本次改动" : activeFile.name}
           </span>
         </div>
-        <CopyButton file={activeFile} />
-      </div>
-      <div className="flex min-h-0 flex-1">
-        {showFileTree ? (
-          <FileList
-            activeName={activeFile.name}
-            files={files}
-            onSelect={setActiveFileName}
-          />
-        ) : null}
-        <div className="min-h-0 flex-1">
-          <CodeView file={activeFile} />
+        <div className="flex items-center gap-0.5">
+          {diffActive ? null : <CopyButton file={activeFile} />}
+          {diff ? (
+            <DiffToggle active={diffActive} onToggle={onToggleDiff} />
+          ) : null}
         </div>
       </div>
+      {diffActive && diff ? (
+        <div className="min-h-0 flex-1">
+          <DiffView
+            newFiles={diff.newFiles}
+            oldFiles={diff.oldFiles}
+            showFileList={showFileTree}
+          />
+        </div>
+      ) : (
+        <div className="flex min-h-0 flex-1">
+          {showFileTree ? (
+            <FileList
+              activeName={activeFile.name}
+              files={files}
+              onSelect={setActiveFileName}
+            />
+          ) : null}
+          <div className="min-h-0 flex-1">
+            <CodeView file={activeFile} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

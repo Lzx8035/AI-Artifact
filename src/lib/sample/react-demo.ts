@@ -1,26 +1,8 @@
-import type { ReactArtifact } from "@/lib/artifact";
+import type { ReactArtifact, ReactFiles } from "@/lib/artifact";
 
-export const sampleReactArtifact: ReactArtifact = {
-  kind: "react",
-  title: "React 庆祝按钮",
-  files: {
-    "/App.js": `import Header from "./components/Header";
-import CelebrateButton from "./components/CelebrateButton";
-import { useCelebration } from "./hooks/useCelebration";
-import "./styles.css";
+// ---------- 两版共享的文件 ----------
 
-export default function App() {
-  const { count, celebrate } = useCelebration();
-
-  return (
-    <main className="stage">
-      <Header />
-      <CelebrateButton onCelebrate={celebrate} />
-      <p className="count">已庆祝 {count} 次</p>
-    </main>
-  );
-}`,
-    "/components/Header.js": `export default function Header() {
+const headerJs = `export default function Header() {
   return (
     <header>
       <span className="badge">React · canvas-confetti</span>
@@ -31,32 +13,17 @@ export default function App() {
       </p>
     </header>
   );
-}`,
-    "/components/CelebrateButton.js": `export default function CelebrateButton({ onCelebrate }) {
+}`;
+
+const celebrateButtonJs = `export default function CelebrateButton({ onCelebrate }) {
   return (
     <button className="cta" onClick={onCelebrate} type="button">
       庆祝一下 🎉
     </button>
   );
-}`,
-    "/hooks/useCelebration.js": `import { useState } from "react";
-import confetti from "canvas-confetti";
+}`;
 
-export function useCelebration() {
-  const [count, setCount] = useState(0);
-
-  function celebrate() {
-    setCount((current) => current + 1);
-    confetti({
-      particleCount: 90,
-      spread: 70,
-      origin: { y: 0.7 },
-    });
-  }
-
-  return { count, celebrate };
-}`,
-    "/styles.css": `:root {
+const baseCss = `:root {
   color-scheme: light;
   --ink: #09090b;
   --muted: #71717a;
@@ -147,8 +114,168 @@ h1 {
   margin: 18px 0 0;
   color: var(--muted);
   font-size: 13px;
+}`;
+
+// ---------- v1:初始版本 ----------
+
+const v1Files: ReactFiles = {
+  "/App.js": `import Header from "./components/Header";
+import CelebrateButton from "./components/CelebrateButton";
+import { useCelebration } from "./hooks/useCelebration";
+import "./styles.css";
+
+export default function App() {
+  const { count, celebrate } = useCelebration();
+
+  return (
+    <main className="stage">
+      <Header />
+      <CelebrateButton onCelebrate={celebrate} />
+      <p className="count">已庆祝 {count} 次</p>
+    </main>
+  );
 }`,
-  },
+  "/components/Header.js": headerJs,
+  "/components/CelebrateButton.js": celebrateButtonJs,
+  "/hooks/useCelebration.js": `import { useState } from "react";
+import confetti from "canvas-confetti";
+
+export function useCelebration() {
+  const [count, setCount] = useState(0);
+
+  function celebrate() {
+    setCount((current) => current + 1);
+    confetti({
+      particleCount: 90,
+      spread: 70,
+      origin: { y: 0.7 },
+    });
+  }
+
+  return { count, celebrate };
+}`,
+  "/styles.css": baseCss,
+};
+
+// ---------- v2:AI 应用户要求加入庆祝历史 ----------
+
+const v2Files: ReactFiles = {
+  "/App.js": `import Header from "./components/Header";
+import CelebrateButton from "./components/CelebrateButton";
+import History from "./components/History";
+import { useCelebration } from "./hooks/useCelebration";
+import "./styles.css";
+
+export default function App() {
+  const { count, history, celebrate } = useCelebration();
+
+  return (
+    <main className="stage">
+      <Header />
+      <CelebrateButton onCelebrate={celebrate} />
+      <p className="count">已庆祝 {count} 次</p>
+      <History records={history} />
+    </main>
+  );
+}`,
+  "/components/Header.js": headerJs,
+  "/components/CelebrateButton.js": celebrateButtonJs,
+  "/components/History.js": `export default function History({ records }) {
+  if (records.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="history">
+      <h2>庆祝历史</h2>
+      <ul>
+        {records.map((record) => (
+          <li key={record.id}>
+            <span>第 {record.no} 次</span>
+            <time>{record.time}</time>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}`,
+  "/hooks/useCelebration.js": `import { useState } from "react";
+import confetti from "canvas-confetti";
+
+export function useCelebration() {
+  const [count, setCount] = useState(0);
+  const [history, setHistory] = useState([]);
+
+  function celebrate() {
+    const next = count + 1;
+    setCount(next);
+    setHistory((records) =>
+      [
+        {
+          id: next,
+          no: next,
+          time: new Date().toLocaleTimeString(),
+        },
+        ...records,
+      ].slice(0, 5),
+    );
+    confetti({
+      particleCount: 90,
+      spread: 70,
+      origin: { y: 0.7 },
+    });
+  }
+
+  return { count, history, celebrate };
+}`,
+  "/styles.css": `${baseCss}
+
+.history {
+  width: 100%;
+  max-width: 320px;
+  margin-top: 28px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #ffffff;
+  text-align: left;
+}
+
+.history h2 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.history ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history li {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.history li:first-child {
+  border-top: 0;
+}
+
+.history time {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}`,
+};
+
+export const sampleReactArtifact: ReactArtifact = {
+  kind: "react",
+  title: "React 庆祝按钮",
+  versions: [v1Files, v2Files],
   dependencies: {
     "canvas-confetti": "1.9.3",
   },

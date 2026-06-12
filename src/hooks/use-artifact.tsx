@@ -11,10 +11,25 @@ import {
 
 import type { Artifact } from "@/lib/artifact";
 
+type OpenOptions = {
+  /** 打开后落在哪个视图(默认预览)。 */
+  view?: "preview" | "code";
+  /** 打开后直接进入代码视图并展开 diff(聊天卡片「查看改动」用)。 */
+  showDiff?: boolean;
+};
+
+type OpenRequest = {
+  /** 每次 open() 递增,让工作区能响应"同一 artifact 再次打开"。 */
+  id: number;
+  view: "preview" | "code";
+  showDiff: boolean;
+};
+
 type ArtifactContextValue = {
   artifact: Artifact | null;
   isOpen: boolean;
-  open: (artifact: Artifact) => void;
+  openRequest: OpenRequest;
+  open: (artifact: Artifact, options?: OpenOptions) => void;
   close: () => void;
 };
 
@@ -23,10 +38,20 @@ const ArtifactContext = createContext<ArtifactContextValue | null>(null);
 export function ArtifactProvider({ children }: { children: ReactNode }) {
   const [artifact, setArtifact] = useState<Artifact | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [openRequest, setOpenRequest] = useState<OpenRequest>({
+    id: 0,
+    view: "preview",
+    showDiff: false,
+  });
 
-  const open = useCallback((next: Artifact) => {
+  const open = useCallback((next: Artifact, options?: OpenOptions) => {
     setArtifact(next);
     setIsOpen(true);
+    setOpenRequest((request) => ({
+      id: request.id + 1,
+      view: options?.showDiff ? "code" : (options?.view ?? "preview"),
+      showDiff: options?.showDiff ?? false,
+    }));
   }, []);
 
   const close = useCallback(() => {
@@ -34,8 +59,8 @@ export function ArtifactProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ artifact, isOpen, open, close }),
-    [artifact, isOpen, open, close],
+    () => ({ artifact, isOpen, openRequest, open, close }),
+    [artifact, isOpen, openRequest, open, close],
   );
 
   return (

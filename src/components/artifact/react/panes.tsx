@@ -13,9 +13,15 @@ import {
   useSandpackNavigation,
 } from "@codesandbox/sandpack-react";
 
-import type { ReactArtifact } from "@/lib/artifact";
+import {
+  currentVersion,
+  previousVersion,
+  type ReactArtifact,
+} from "@/lib/artifact";
 import { IconButton } from "@/components/artifact/icon-button";
 import { FileTreeToggle } from "@/components/artifact/file-tree-toggle";
+import { DiffToggle } from "@/components/artifact/diff-toggle";
+import { DiffView } from "@/components/artifact/diff-view";
 
 type View = "preview" | "code";
 
@@ -170,12 +176,21 @@ export function ReactPanes({
   view,
   showFileTree,
   onToggleFileTree,
+  showDiff,
+  onToggleDiff,
 }: {
   artifact: ReactArtifact;
   view: View;
   showFileTree: boolean;
   onToggleFileTree: () => void;
+  showDiff: boolean;
+  onToggleDiff: () => void;
 }) {
+  const files = currentVersion(artifact.versions);
+  const previousFiles = previousVersion(artifact.versions);
+  // diff 对比的是快照 v(n-1) → v(n),即「AI 本次改动」,与编辑器实时编辑无关。
+  const diffActive = showDiff && previousFiles !== null;
+
   // SandpackProvider 内部用「props 身份比较」决定是否整体重置文件状态
   // (dist 的 useFiles effect 依赖 [props.files, props.customSetup, props.template])。
   // 这两个 props 必须 memoize,否则本组件任何一次重渲染(如切换视图)
@@ -185,9 +200,9 @@ export function ReactPanes({
     [artifact.dependencies],
   );
   const options = useMemo(() => {
-    const visibleFiles = Object.keys(artifact.files);
+    const visibleFiles = Object.keys(files);
     return { activeFile: visibleFiles[0], visibleFiles };
-  }, [artifact.files]);
+  }, [files]);
 
   // 代码面板首次切换到时才挂载,之后保持挂载(同 artifact-workspace 的做法)。
   const [hasVisitedCode, setHasVisitedCode] = useState(false);
@@ -199,7 +214,7 @@ export function ReactPanes({
     <div className="artifact-react h-full min-h-0">
       <SandpackProvider
         customSetup={customSetup}
-        files={artifact.files}
+        files={files}
         options={options}
         template="react"
         theme="light"
@@ -234,14 +249,28 @@ export function ReactPanes({
             <div className="flex h-9 shrink-0 items-center justify-between border-b border-zinc-200 bg-zinc-50 px-2">
               <div className="flex min-w-0 items-center gap-1">
                 <FileTreeToggle onToggle={onToggleFileTree} show={showFileTree} />
-                <ActiveFilePath />
+                {diffActive ? (
+                  <span className="truncate px-1 font-mono text-xs text-zinc-500">
+                    本次改动
+                  </span>
+                ) : (
+                  <ActiveFilePath />
+                )}
               </div>
               <div className="flex items-center gap-0.5">
-                <ResetButton originalFiles={artifact.files} />
-                <SandpackCopyButton />
+                {diffActive ? null : (
+                  <>
+                    <ResetButton originalFiles={files} />
+                    <SandpackCopyButton />
+                  </>
+                )}
+                {previousFiles ? (
+                  <DiffToggle active={diffActive} onToggle={onToggleDiff} />
+                ) : null}
               </div>
             </div>
-            <div className="flex min-h-0 flex-1">
+            {/* Sandpack 子树保持挂载(hidden),diff 只是盖在上面的只读审阅 */}
+            <div className={diffActive ? "hidden" : "flex min-h-0 flex-1"}>
               <SandpackFileExplorer
                 autoHiddenFiles
                 className={`w-44 shrink-0 border-r border-zinc-200 ${
@@ -257,6 +286,15 @@ export function ReactPanes({
                 />
               </div>
             </div>
+            {diffActive && previousFiles ? (
+              <div className="min-h-0 flex-1">
+                <DiffView
+                  newFiles={files}
+                  oldFiles={previousFiles}
+                  showFileList={showFileTree}
+                />
+              </div>
+            ) : null}
           </div>
         ) : null}
       </SandpackProvider>

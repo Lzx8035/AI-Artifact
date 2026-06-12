@@ -3,7 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { FileCode2, X } from "lucide-react";
 
-import { toFiles } from "@/lib/artifact";
+import {
+  currentVersion,
+  previousVersion,
+  toFileMap,
+  toFiles,
+} from "@/lib/artifact";
 import { buildPreviewDocument } from "@/lib/build-preview";
 import { useArtifact } from "@/hooks/use-artifact";
 import { IconButton } from "@/components/artifact/icon-button";
@@ -50,8 +55,19 @@ function SegmentedToggle({
 }
 
 export function ArtifactWorkspace() {
-  const { artifact, close } = useArtifact();
-  const [view, setView] = useState<View>("preview");
+  const { artifact, close, openRequest } = useArtifact();
+  const [view, setView] = useState<View>(openRequest.view);
+  // diff 审阅模式:默认关(显示干净的最新代码),卡片「查看改动」可直接打开。
+  const [showDiff, setShowDiff] = useState(openRequest.showDiff);
+
+  // 每次 open()(含同一 artifact 再次打开)按意图重置视图——渲染期间调整 state。
+  const [handledRequestId, setHandledRequestId] = useState(openRequest.id);
+  if (handledRequestId !== openRequest.id) {
+    setHandledRequestId(openRequest.id);
+    setView(openRequest.view);
+    setShowDiff(openRequest.showDiff);
+  }
+
   // 代码面板首次切换到时才挂载,之后保持挂载(隐藏)。避免在 display:none
   // 里挂载 Tooltip 触发器(react-aria 会告警),也保住编辑器状态。
   const [hasVisitedCode, setHasVisitedCode] = useState(false);
@@ -73,13 +89,33 @@ export function ArtifactWorkspace() {
   }, []);
 
   const files = useMemo(
-    () => (artifact?.kind === "html" ? toFiles(artifact) : []),
+    () =>
+      artifact?.kind === "html"
+        ? toFiles(currentVersion(artifact.versions))
+        : [],
     [artifact],
   );
   const previewDocument = useMemo(
-    () => (artifact?.kind === "html" ? buildPreviewDocument(artifact) : ""),
+    () =>
+      artifact?.kind === "html"
+        ? buildPreviewDocument(currentVersion(artifact.versions))
+        : "",
     [artifact],
   );
+  // html 档的 diff 数据(无上一版本则为 null,面板据此隐藏 diff 开关)
+  const htmlDiff = useMemo(() => {
+    if (artifact?.kind !== "html") {
+      return null;
+    }
+    const previous = previousVersion(artifact.versions);
+    if (!previous) {
+      return null;
+    }
+    return {
+      oldFiles: toFileMap(previous),
+      newFiles: toFileMap(currentVersion(artifact.versions)),
+    };
+  }, [artifact]);
 
   if (!artifact) {
     return null;
@@ -122,9 +158,12 @@ export function ArtifactWorkspace() {
             />
             {hasVisitedCode || view === "code" ? (
               <HtmlCode
+                diff={htmlDiff}
                 files={files}
                 hidden={view !== "code"}
+                onToggleDiff={() => setShowDiff((c) => !c)}
                 onToggleFileTree={() => setShowFileTree((c) => !c)}
+                showDiff={showDiff}
                 showFileTree={showFileTree}
               />
             ) : null}
@@ -132,7 +171,9 @@ export function ArtifactWorkspace() {
         ) : (
           <ReactPanes
             artifact={artifact}
+            onToggleDiff={() => setShowDiff((c) => !c)}
             onToggleFileTree={() => setShowFileTree((c) => !c)}
+            showDiff={showDiff}
             showFileTree={showFileTree}
             view={view}
           />

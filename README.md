@@ -16,6 +16,7 @@
 - **react-resizable-panels** — 可拖拽的左右分栏
 - **prism-react-renderer** — html artifact 代码视图的语法高亮
 - **@codesandbox/sandpack-react** — react artifact 的打包预览与可编辑代码
+- **diff**(jsdiff)— 版本间差异的实时计算(自绘 GitHub 风格 unified 视图)
 - **Tailwind CSS 4**
 
 html 档预览不依赖任何在线沙箱:把 `{ html, css, js }` 装配成单个文档,渲染进 `sandbox="allow-scripts"` 的 `<iframe srcDoc>`。react 档则交给 Sandpack:npm 依赖真实安装打包,代码 Tab 可直接编辑、预览实时热更新。
@@ -46,43 +47,52 @@ src/
 │     │  └─ code.tsx           # html 档代码面板:文件列表 + 复制 + prism 高亮
 │     ├─ react/
 │     │  └─ panes.tsx          # react 档双面板:Sandpack 打包预览 + 文件树 + 可编辑代码
+│     ├─ diff-view.tsx         # GitHub 风格 unified diff(M/A/D 徽章、红绿行)
+│     ├─ diff-toggle.tsx       # 「查看本次改动 / 返回代码」开关按钮
+│     ├─ file-tree-toggle.tsx  # 文件列表显隐按钮(⌘B)
 │     └─ icon-button.tsx       # 共享的图标按钮(带 Tooltip)
 ├─ hooks/
-│  ├─ use-artifact.tsx         # 面板开关 + 当前 artifact 的状态(Context + hook)
+│  ├─ use-artifact.tsx         # 面板开关 + 当前 artifact + 打开意图(Context + hook)
 │  └─ use-is-desktop.ts        # md 断点检测,保证工作区只挂载一份
 └─ lib/
-   ├─ artifact.ts              # Artifact 数据模型(html | react 联合)+ toFiles()
+   ├─ artifact.ts              # Artifact 数据模型(html | react 联合,versions 快照)
    ├─ build-preview.ts         # 把 { html, css, js } 装配成预览文档(html 档)
+   ├─ diff.ts                  # jsdiff 封装:两版文件映射 → 每文件的 diff 行
    └─ sample/
-      ├─ html-demo.ts          # html 样例(组装下面三段 Focus 页面源码)
-      ├─ focus-html.ts         # html 样例页面 HTML
-      ├─ focus-css.ts          # html 样例页面 CSS
-      ├─ focus-js.ts           # html 样例页面 JS
-      └─ react-demo.ts         # react 样例(多目录 Sandpack 文件 + npm 依赖)
+      ├─ html-demo.ts          # html 样例(v1 + v2 两个版本)
+      ├─ focus-html/css/js.ts  # html 样例 v1 源码
+      ├─ focus-v2-*.ts         # html 样例 v2 源码(深色模式)
+      └─ react-demo.ts         # react 样例(v1 + v2,多目录 + npm 依赖)
 ```
 
 ## 数据模型
 
-artifact 是一个按 `kind` 区分的联合类型:
+artifact 是一个按 `kind` 区分的联合类型,**按版本存全量快照**(最后一项 = 当前版本):
 
 ```ts
 type HtmlArtifact = {
   kind: "html";
   title: string;
-  html: string;
-  css: string;
-  js: string;
+  versions: Array<{ html: string; css: string; js: string }>;
 };
 
 type ReactArtifact = {
   kind: "react";
   title: string;
-  files: Record<string, string>;          // Sandpack 文件,如 "/App.js"
-  dependencies?: Record<string, string>;  // npm 依赖
+  versions: Array<Record<string, string>>;  // Sandpack 文件快照,如 "/App.js"
+  dependencies?: Record<string, string>;    // npm 依赖
 };
 
 type Artifact = HtmlArtifact | ReactArtifact;
 ```
+
+## Diff 审阅
+
+模拟「AI 修改已有代码」的场景:聊天里的 v2 卡片点「查看改动」会直接打开 **GitHub 风格的 unified diff**(红/绿行、M/A/D 文件徽章、`+x −y` 计数)。
+
+- **存储 = 快照,diff = 实时计算**:版本只存完整文件,差异由 jsdiff 在打开时按行算出,不持久化。
+- **默认显示干净的最新代码**:diff 是代码工具栏上按需进入的审阅模式;预览永远运行最新版本。
+- react 档的 diff 对比的是版本快照(「AI 本次改动」),与编辑器里的实时编辑无关。
 
 html 档的 `buildPreviewDocument()` 采用**注入式**装配:把 `<style>` 注入到 `</head>` 前、`<script>` 注入到 `</body>` 前(并转义内联脚本里的 `</script>`)。因此 `html` 字段无需自己引用样式/脚本文件。
 

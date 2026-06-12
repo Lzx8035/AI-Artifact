@@ -4,8 +4,8 @@ import {
   ArrowUp,
   Atom,
   Bot,
-  ChevronRight,
   Code2,
+  FileDiff,
   Menu,
   Plus,
   Sparkles,
@@ -17,12 +17,55 @@ import { Group, Panel, Separator } from "react-resizable-panels";
 import { ArtifactWorkspace } from "@/components/artifact/workspace";
 import { ArtifactProvider, useArtifact } from "@/hooks/use-artifact";
 import { useIsDesktop } from "@/hooks/use-is-desktop";
+import type { Artifact } from "@/lib/artifact";
 import { sampleHtmlArtifact } from "@/lib/sample/html-demo";
 import { sampleReactArtifact } from "@/lib/sample/react-demo";
 
-function ChatPanel() {
+/**
+ * 卡片右侧的打开按钮组:「预览 / 代码」,v2 卡片追加「改动」(直达 diff)。
+ * 点哪个就打开到哪个视图。
+ */
+function CardOpenActions({
+  artifact,
+  withDiff = false,
+}: {
+  artifact: Artifact;
+  withDiff?: boolean;
+}) {
   const { open } = useArtifact();
+  const itemClass =
+    "px-2.5 py-1 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-zinc-950";
 
+  return (
+    <div className="inline-flex shrink-0 overflow-hidden rounded-lg border border-zinc-200">
+      <button
+        className={itemClass}
+        onClick={() => open(artifact)}
+        type="button"
+      >
+        预览
+      </button>
+      <button
+        className={`${itemClass} border-l border-zinc-200`}
+        onClick={() => open(artifact, { view: "code" })}
+        type="button"
+      >
+        代码
+      </button>
+      {withDiff ? (
+        <button
+          className={`${itemClass} border-l border-zinc-200`}
+          onClick={() => open(artifact, { showDiff: true })}
+          type="button"
+        >
+          改动
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function ChatPanel() {
   return (
     <section className="flex h-full min-w-0 flex-col bg-white">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-200 px-4">
@@ -81,14 +124,7 @@ function ChatPanel() {
                         HTML · CSS · JavaScript
                       </p>
                     </div>
-                    <button
-                      className="inline-flex shrink-0 cursor-pointer items-center gap-1 text-sm font-medium text-zinc-900 transition-colors hover:text-zinc-600"
-                      onClick={() => open(sampleHtmlArtifact)}
-                      type="button"
-                    >
-                      查看代码
-                      <ChevronRight aria-hidden="true" className="size-4" />
-                    </button>
+                    <CardOpenActions artifact={sampleHtmlArtifact} />
                   </div>
                   <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
                     <span>index.html</span>
@@ -136,19 +172,97 @@ function ChatPanel() {
                         React · canvas-confetti
                       </p>
                     </div>
-                    <button
-                      className="inline-flex shrink-0 cursor-pointer items-center gap-1 text-sm font-medium text-zinc-900 transition-colors hover:text-zinc-600"
-                      onClick={() => open(sampleReactArtifact)}
-                      type="button"
-                    >
-                      打开预览
-                      <ChevronRight aria-hidden="true" className="size-4" />
-                    </button>
+                    <CardOpenActions artifact={sampleReactArtifact} />
                   </div>
                   <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
                     <span>App.js</span>
                     <span>components/</span>
                     <span>hooks/</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <div className="max-w-[82%] rounded-2xl rounded-tr-md bg-zinc-100 px-4 py-3 text-[15px] leading-6 text-zinc-900">
+              产品介绍页加一个深色模式切换。
+            </div>
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white">
+              <User aria-hidden="true" className="size-4" />
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-sm">
+              <Sparkles aria-hidden="true" className="size-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-col gap-3 text-[15px] leading-7 text-zinc-700">
+                <p>
+                  已更新产品介绍页：导航栏加了「深色模式」切换按钮，CSS
+                  增加了一组暗色变量，脚本里补充了切换逻辑。可以查看具体改动。
+                </p>
+                <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
+                  <div className="flex items-center gap-3 border-b border-zinc-100 px-4 py-3">
+                    <div className="flex size-9 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700">
+                      <FileDiff aria-hidden="true" className="size-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-zinc-950">
+                        {sampleHtmlArtifact.title}
+                      </p>
+                      <p className="text-xs text-zinc-500">v2 · 深色模式</p>
+                    </div>
+                    <CardOpenActions artifact={sampleHtmlArtifact} withDiff />
+                  </div>
+                  <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
+                    <span>index.html</span>
+                    <span>styles.css</span>
+                    <span>script.js</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <div className="max-w-[82%] rounded-2xl rounded-tr-md bg-zinc-100 px-4 py-3 text-[15px] leading-6 text-zinc-900">
+              庆祝按钮加一个历史记录。
+            </div>
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white">
+              <User aria-hidden="true" className="size-4" />
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-sm">
+              <Sparkles aria-hidden="true" className="size-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-col gap-3 text-[15px] leading-7 text-zinc-700">
+                <p>
+                  已更新 React
+                  组件：新增了 History 组件展示最近五次庆祝，useCelebration
+                  里记录历史，样式同步补充。可以查看具体改动。
+                </p>
+                <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
+                  <div className="flex items-center gap-3 border-b border-zinc-100 px-4 py-3">
+                    <div className="flex size-9 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700">
+                      <FileDiff aria-hidden="true" className="size-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-zinc-950">
+                        {sampleReactArtifact.title}
+                      </p>
+                      <p className="text-xs text-zinc-500">v2 · 庆祝历史</p>
+                    </div>
+                    <CardOpenActions artifact={sampleReactArtifact} withDiff />
+                  </div>
+                  <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
+                    <span>History.js 新增</span>
+                    <span>useCelebration.js</span>
+                    <span>App.js</span>
                   </div>
                 </div>
               </div>
