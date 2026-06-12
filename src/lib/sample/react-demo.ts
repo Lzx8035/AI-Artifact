@@ -4,11 +4,45 @@ export const sampleReactArtifact: ReactArtifact = {
   kind: "react",
   title: "React 庆祝按钮",
   files: {
-    "/App.js": `import { useState } from "react";
-import confetti from "canvas-confetti";
+    "/App.js": `import Header from "./components/Header";
+import CelebrateButton from "./components/CelebrateButton";
+import { useCelebration } from "./hooks/useCelebration";
 import "./styles.css";
 
 export default function App() {
+  const { count, celebrate } = useCelebration();
+
+  return (
+    <main className="stage">
+      <Header />
+      <CelebrateButton onCelebrate={celebrate} />
+      <p className="count">已庆祝 {count} 次</p>
+    </main>
+  );
+}`,
+    "/components/Header.js": `export default function Header() {
+  return (
+    <header>
+      <span className="badge">React · canvas-confetti</span>
+      <h1>每一次进展，都值得庆祝。</h1>
+      <p className="intro">
+        这个组件运行在 Sandpack 里：npm 依赖被真实安装打包，
+        修改代码会实时热更新。
+      </p>
+    </header>
+  );
+}`,
+    "/components/CelebrateButton.js": `export default function CelebrateButton({ onCelebrate }) {
+  return (
+    <button className="cta" onClick={onCelebrate} type="button">
+      庆祝一下 🎉
+    </button>
+  );
+}`,
+    "/hooks/useCelebration.js": `import { useState } from "react";
+import confetti from "canvas-confetti";
+
+export function useCelebration() {
   const [count, setCount] = useState(0);
 
   function celebrate() {
@@ -20,20 +54,7 @@ export default function App() {
     });
   }
 
-  return (
-    <main className="stage">
-      <span className="badge">React · canvas-confetti</span>
-      <h1>每一次进展，都值得庆祝。</h1>
-      <p className="intro">
-        这个组件运行在 Sandpack 里：npm 依赖被真实安装打包，
-        修改代码会实时热更新。
-      </p>
-      <button className="cta" onClick={celebrate} type="button">
-        庆祝一下 🎉
-      </button>
-      <p className="count">已庆祝 {count} 次</p>
-    </main>
-  );
+  return { count, celebrate };
 }`,
     "/styles.css": `:root {
   color-scheme: light;
@@ -62,6 +83,12 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
+}
+
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .badge {

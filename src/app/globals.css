@@ -56,6 +56,17 @@ a {
   background: #ffffff;
 }
 
-.artifact-react .cm-editor {
+/* 统一通过 Sandpack 的字号变量控制,确保编辑器与其初始化前的
+   静态占位符(sp-pre-placeholder)字号一致,避免切换文件时闪烁。 */
+.artifact-react .sp-wrapper {
+  --sp-font-size: 12px;
+}
+
+.artifact-react .sp-file-explorer {
+  width: 176px;
+  flex: 0 0 176px;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
   font-size: 12px;
 }

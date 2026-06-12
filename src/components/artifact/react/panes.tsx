@@ -5,6 +5,7 @@ import { Check, Copy, Globe, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "@heroui/react";
 import {
   SandpackCodeEditor,
+  SandpackFileExplorer,
   SandpackPreview,
   SandpackProvider,
   useActiveCode,
@@ -122,27 +123,14 @@ function SandpackCopyButton() {
   );
 }
 
-function FileTabs() {
+/** 顶栏里的当前文件路径(随文件树选择实时变化)。 */
+function ActiveFilePath() {
   const { sandpack } = useSandpack();
 
   return (
-    <div className="flex items-center gap-0.5">
-      {sandpack.visibleFiles.map((path) => (
-        <button
-          aria-pressed={path === sandpack.activeFile}
-          className={`rounded-md px-2.5 py-1 font-mono text-xs transition-colors ${
-            path === sandpack.activeFile
-              ? "bg-white text-zinc-950 shadow-sm"
-              : "text-zinc-500 hover:text-zinc-900"
-          }`}
-          key={path}
-          onClick={() => sandpack.setActiveFile(path)}
-          type="button"
-        >
-          {path.slice(1)}
-        </button>
-      ))}
-    </div>
+    <span className="truncate px-1 font-mono text-xs text-zinc-500">
+      {sandpack.activeFile.slice(1)}
+    </span>
   );
 }
 
@@ -209,15 +197,22 @@ export function ReactPanes({
             }
           >
             <div className="flex h-9 shrink-0 items-center justify-between border-b border-zinc-200 bg-zinc-50 px-2">
-              <FileTabs />
+              <ActiveFilePath />
               <SandpackCopyButton />
             </div>
-            <div className="min-h-0 flex-1">
-              <SandpackCodeEditor
-                className="h-full"
-                showLineNumbers
-                showTabs={false}
+            <div className="flex min-h-0 flex-1">
+              <SandpackFileExplorer
+                autoHiddenFiles
+                className="w-44 shrink-0 border-r border-zinc-200"
               />
+              <div className="min-h-0 flex-1">
+                <SandpackCodeEditor
+                  className="h-full"
+                  initMode="immediate"
+                  showLineNumbers
+                  showTabs={false}
+                />
+              </div>
             </div>
           </div>
         ) : null}

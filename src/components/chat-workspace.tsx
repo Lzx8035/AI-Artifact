@@ -147,8 +147,8 @@ function ChatPanel() {
                   </div>
                   <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
                     <span>App.js</span>
-                    <span>styles.css</span>
-                    <span>package.json</span>
+                    <span>components/</span>
+                    <span>hooks/</span>
                   </div>
                 </div>
               </div>

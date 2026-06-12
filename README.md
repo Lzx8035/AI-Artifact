@@ -45,7 +45,7 @@ src/
 │     │  ├─ preview.tsx        # html 档预览面板:地址栏 + 刷新/新窗口 + iframe
 │     │  └─ code.tsx           # html 档代码面板:文件切换 + 复制 + prism 高亮
 │     ├─ react/
-│     │  └─ panes.tsx          # react 档双面板:Sandpack 打包预览 + 可编辑代码
+│     │  └─ panes.tsx          # react 档双面板:Sandpack 打包预览 + 文件树 + 可编辑代码
 │     └─ icon-button.tsx       # 共享的图标按钮(带 Tooltip)
 ├─ hooks/
 │  ├─ use-artifact.tsx         # 面板开关 + 当前 artifact 的状态(Context + hook)
@@ -58,7 +58,7 @@ src/
       ├─ focus-html.ts         # html 样例页面 HTML
       ├─ focus-css.ts          # html 样例页面 CSS
       ├─ focus-js.ts           # html 样例页面 JS
-      └─ react-demo.ts         # react 样例(Sandpack 文件 + npm 依赖)
+      └─ react-demo.ts         # react 样例(多目录 Sandpack 文件 + npm 依赖)
 ```
 
 ## 数据模型
