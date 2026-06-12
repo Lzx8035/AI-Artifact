@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check, Copy, Globe, Loader2, RefreshCw } from "lucide-react";
+import { Check, Copy, Globe, Loader2, RefreshCw, RotateCcw } from "lucide-react";
 import { toast } from "@heroui/react";
 import {
   SandpackCodeEditor,
@@ -124,6 +124,36 @@ function SandpackCopyButton() {
   );
 }
 
+/**
+ * 恢复初始代码。只在用户改动过任一文件后出现;
+ * resetAllFiles 会把所有文件重置回 Provider props 里的原始内容。
+ */
+function ResetButton({
+  originalFiles,
+}: {
+  originalFiles: Record<string, string>;
+}) {
+  const { sandpack } = useSandpack();
+  const dirty = Object.entries(originalFiles).some(
+    ([path, code]) => sandpack.files[path]?.code !== code,
+  );
+
+  if (!dirty) {
+    return null;
+  }
+
+  function reset() {
+    sandpack.resetAllFiles();
+    toast.success("已恢复初始代码");
+  }
+
+  return (
+    <IconButton label="恢复初始代码" onPress={reset} tooltip="恢复初始代码">
+      <RotateCcw aria-hidden="true" className="size-4" />
+    </IconButton>
+  );
+}
+
 /** 顶栏里的当前文件路径(随文件树选择实时变化)。 */
 function ActiveFilePath() {
   const { sandpack } = useSandpack();
@@ -206,7 +236,10 @@ export function ReactPanes({
                 <FileTreeToggle onToggle={onToggleFileTree} show={showFileTree} />
                 <ActiveFilePath />
               </div>
-              <SandpackCopyButton />
+              <div className="flex items-center gap-0.5">
+                <ResetButton originalFiles={artifact.files} />
+                <SandpackCopyButton />
+              </div>
             </div>
             <div className="flex min-h-0 flex-1">
               <SandpackFileExplorer
