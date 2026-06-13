@@ -9,6 +9,7 @@ import { IconButton } from "@/components/artifact/icon-button";
 import { HtmlPreview } from "@/components/artifact/html/preview";
 import { HtmlCode } from "@/components/artifact/html/code";
 import { ReactPanes } from "@/components/artifact/react/panes";
+import { StreamingView } from "@/components/artifact/streaming-view";
 
 type View = "preview" | "code";
 
@@ -75,6 +76,7 @@ export function ArtifactWorkspace({
 }: ArtifactWorkspaceProps) {
   // 缺省定位到最新版;index>0 时才有可对比的上一版(diff 开关据此显隐)。
   const index = versionIndex ?? artifact.versions.length - 1;
+  const streaming = artifact.status === "streaming";
   const [view, setView] = useState<View>(initialView);
   // diff 审阅模式:默认关(显示干净的最新代码),卡片「查看改动」可直接打开。
   const [showDiff, setShowDiff] = useState(initialShowDiff);
@@ -147,7 +149,11 @@ export function ArtifactWorkspace({
               {artifact.title}
             </p>
             <p className="hidden text-[11px] leading-tight text-zinc-400 sm:block">
-              {artifact.kind === "html" ? "静态 HTML 预览" : "React · Sandpack"}
+              {streaming
+                ? "生成中…"
+                : artifact.kind === "html"
+                  ? "静态 HTML 预览"
+                  : "React · Sandpack"}
             </p>
           </div>
         </div>
@@ -162,7 +168,9 @@ export function ArtifactWorkspace({
       </header>
 
       <div className="min-h-0 flex-1">
-        {artifact.kind === "html" ? (
+        {streaming ? (
+          <StreamingView artifact={artifact} versionIndex={index} view={view} />
+        ) : artifact.kind === "html" ? (
           <>
             <HtmlPreview
               hidden={view !== "preview"}

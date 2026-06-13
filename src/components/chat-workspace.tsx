@@ -7,6 +7,7 @@ import {
   Code2,
   FileDiff,
   Menu,
+  Play,
   Plus,
   Sparkles,
   User,
@@ -17,9 +18,11 @@ import { Group, Panel, Separator } from "react-resizable-panels";
 import { ArtifactWorkspace } from "@/components/artifact/workspace";
 import { ArtifactProvider, useArtifact } from "@/hooks/use-artifact";
 import { useIsDesktop } from "@/hooks/use-is-desktop";
+import { useSimulatedStream } from "@/hooks/use-simulated-stream";
 import type { Artifact } from "@/lib/artifact";
 import { sampleHtmlArtifact } from "@/lib/sample/html-demo";
 import { sampleReactArtifact } from "@/lib/sample/react-demo";
+import { sampleStreamArtifact } from "@/lib/sample/stream-demo";
 
 /**
  * 卡片右侧的打开按钮组:「预览 / 代码」,非首版追加「改动」(直达该版本的 diff)。
@@ -62,6 +65,22 @@ function CardOpenActions({
         </button>
       ) : null}
     </div>
+  );
+}
+
+/** 流式生成 demo 的触发按钮:打开工作区并以流式播放生成过程。 */
+function GenerateButton({ artifact }: { artifact: Artifact }) {
+  const { open } = useArtifact();
+
+  return (
+    <button
+      className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-700"
+      onClick={() => open(artifact, { stream: true })}
+      type="button"
+    >
+      <Play aria-hidden="true" className="size-3.5" />
+      观看生成
+    </button>
   );
 }
 
@@ -312,6 +331,48 @@ function ChatPanel() {
             </div>
           </div>
 
+          <div className="flex justify-end gap-3">
+            <div className="max-w-[82%] rounded-2xl rounded-tr-md bg-zinc-100 px-4 py-3 text-[15px] leading-6 text-zinc-900">
+              想看看流式生成的过程，从零写一个组件。
+            </div>
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white">
+              <User aria-hidden="true" className="size-4" />
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-sm">
+              <Sparkles aria-hidden="true" className="size-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-col gap-3 text-[15px] leading-7 text-zinc-700">
+                <p>
+                  好的，这就生成一个实时时钟组件。点下面的按钮可以看到代码逐步
+                  写出来，生成完成后会自动打包运行。
+                </p>
+                <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
+                  <div className="flex items-center gap-3 border-b border-zinc-100 px-4 py-3">
+                    <div className="flex size-9 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700">
+                      <Atom aria-hidden="true" className="size-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-zinc-950">
+                        {sampleStreamArtifact.title}
+                      </p>
+                      <p className="text-xs text-zinc-500">React · 流式生成</p>
+                    </div>
+                    <GenerateButton artifact={sampleStreamArtifact} />
+                  </div>
+                  <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
+                    <span>App.js</span>
+                    <span>components/</span>
+                    <span>styles.css</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="flex gap-3">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-sm">
               <Bot aria-hidden="true" className="size-4" />
@@ -356,12 +417,21 @@ function WorkspaceLayout() {
   // ChatPanel 保持双挂载(成本低,且 SSR 渲染稳定)。
   const isDesktop = useIsDesktop();
 
+  // demo 侧模拟流:openRequest.stream 时把目标 artifact 逐字播放成 streaming 态,
+  // 播完返回 complete。真实接入这里直接换成后端流式数据。
+  const shownArtifact = useSimulatedStream(
+    artifact,
+    openRequest.stream,
+    openRequest.versionIndex,
+    openRequest.id,
+  );
+
   // key=openRequest.id:每次 open()(含同一 artifact 再次打开)重挂工作区,
   // 让 initialView/initialShowDiff 按本次打开意图重新生效。
   const workspace =
-    isOpen && artifact ? (
+    isOpen && shownArtifact ? (
       <ArtifactWorkspace
-        artifact={artifact}
+        artifact={shownArtifact}
         initialShowDiff={openRequest.showDiff}
         initialView={openRequest.view}
         key={openRequest.id}

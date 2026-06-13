@@ -18,6 +18,8 @@ type OpenOptions = {
   showDiff?: boolean;
   /** 定位到哪个版本(默认最新版);diff 即该版本 vs 上一版。 */
   versionIndex?: number;
+  /** 以流式生成的方式播放该版本(demo:逐字揭示)。 */
+  stream?: boolean;
 };
 
 type OpenRequest = {
@@ -26,6 +28,7 @@ type OpenRequest = {
   view: "preview" | "code";
   showDiff: boolean;
   versionIndex: number;
+  stream: boolean;
 };
 
 type ArtifactContextValue = {
@@ -46,6 +49,7 @@ export function ArtifactProvider({ children }: { children: ReactNode }) {
     view: "preview",
     showDiff: false,
     versionIndex: 0,
+    stream: false,
   });
 
   const open = useCallback((next: Artifact, options?: OpenOptions) => {
@@ -53,9 +57,15 @@ export function ArtifactProvider({ children }: { children: ReactNode }) {
     setIsOpen(true);
     setOpenRequest((request) => ({
       id: request.id + 1,
-      view: options?.showDiff ? "code" : (options?.view ?? "preview"),
+      // 流式时默认落在代码视图,看着代码被写出来。
+      view: options?.stream
+        ? (options?.view ?? "code")
+        : options?.showDiff
+          ? "code"
+          : (options?.view ?? "preview"),
       showDiff: options?.showDiff ?? false,
       versionIndex: options?.versionIndex ?? next.versions.length - 1,
+      stream: options?.stream ?? false,
     }));
   }, []);
 

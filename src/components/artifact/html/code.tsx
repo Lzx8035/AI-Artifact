@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { Check, Copy, File } from "lucide-react";
 import { toast } from "@heroui/react";
-import { Highlight, themes } from "prism-react-renderer";
 
 import type { ArtifactFile } from "@/lib/artifact";
 import { IconButton } from "@/components/artifact/icon-button";
 import { FileTreeToggle } from "@/components/artifact/file-tree-toggle";
 import { DiffToggle } from "@/components/artifact/diff-toggle";
 import { DiffView } from "@/components/artifact/diff-view";
+import { CodeBlock } from "@/components/artifact/code-block";
 
 type HtmlDiff = {
   oldFiles: Record<string, string>;
@@ -80,33 +80,6 @@ function FileList({
   );
 }
 
-function CodeView({ file }: { file: ArtifactFile }) {
-  return (
-    <Highlight code={file.code} language={file.language} theme={themes.github}>
-      {({ className, style, tokens, getLineProps, getTokenProps }) => (
-        <pre
-          className={`${className} h-full overflow-auto bg-white p-4 font-mono text-xs leading-5`}
-          style={style}
-        >
-          {tokens.map((line, lineIndex) => {
-            const lineProps = getLineProps({ line });
-            return (
-              <div key={lineIndex} {...lineProps}>
-                <span className="mr-4 inline-block w-6 select-none text-right text-zinc-300">
-                  {lineIndex + 1}
-                </span>
-                {line.map((token, tokenIndex) => (
-                  <span key={tokenIndex} {...getTokenProps({ token })} />
-                ))}
-              </div>
-            );
-          })}
-        </pre>
-      )}
-    </Highlight>
-  );
-}
-
 export function HtmlCode({
   files,
   hidden,
@@ -167,7 +140,7 @@ export function HtmlCode({
             />
           ) : null}
           <div className="min-h-0 flex-1">
-            <CodeView file={activeFile} />
+            <CodeBlock code={activeFile.code} language={activeFile.language} />
           </div>
         </div>
       )}

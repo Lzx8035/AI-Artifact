@@ -51,9 +51,12 @@ src/
 │     ├─ diff-view.tsx         # GitHub 风格 unified diff(M/A/D 徽章、红绿行)
 │     ├─ diff-toggle.tsx       # 「查看本次改动 / 返回代码」开关按钮
 │     ├─ file-tree-toggle.tsx  # 文件列表显隐按钮(⌘B)
+│     ├─ streaming-view.tsx    # 流式生成期间的统一视图(代码渐增 + 预览占位)
+│     ├─ code-block.tsx        # 共享的只读 prism 代码块(html 代码视图 + 流式视图)
 │     └─ icon-button.tsx       # 共享的图标按钮(带 Tooltip)
 ├─ hooks/
 │  ├─ use-artifact.tsx         # 【demo 侧】打开/关闭 + 当前 artifact + 打开意图
+│  ├─ use-simulated-stream.ts  # 【demo 侧】把样例逐字播成流式(真实接入换后端流)
 │  └─ use-is-desktop.ts        # md 断点检测,保证工作区只挂载一份
 └─ lib/
    ├─ artifact.ts              # Artifact 数据模型(html | react 联合,versions 快照)
@@ -63,7 +66,8 @@ src/
       ├─ html-demo.ts          # html 样例(v1 + v2 两个版本)
       ├─ focus-html/css/js.ts  # html 样例 v1 源码
       ├─ focus-v2-*.ts         # html 样例 v2 源码(深色模式)
-      └─ react-demo.ts         # react 样例(v1 + v2 + v3,多目录 + npm 依赖)
+      ├─ react-demo.ts         # react 样例(v1 + v2 + v3,多目录 + npm 依赖)
+      └─ stream-demo.ts        # 流式生成 demo 样例(实时时钟,单版本)
 ```
 
 ## 数据模型
@@ -86,6 +90,8 @@ type ReactArtifact = {
 
 type Artifact = HtmlArtifact | ReactArtifact;
 ```
+
+两档都可带 `status?: "streaming" | "complete"`(缺省 complete):`streaming` 时工作区显示「生成中」——代码逐步出现、预览占位,react 档的 Sandpack 待完成后才挂载。
 
 ## 作为组件接入
 
