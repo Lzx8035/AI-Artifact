@@ -16,6 +16,8 @@ type OpenOptions = {
   view?: "preview" | "code";
   /** 打开后直接进入代码视图并展开 diff(聊天卡片「查看改动」用)。 */
   showDiff?: boolean;
+  /** 定位到哪个版本(默认最新版);diff 即该版本 vs 上一版。 */
+  versionIndex?: number;
 };
 
 type OpenRequest = {
@@ -23,6 +25,7 @@ type OpenRequest = {
   id: number;
   view: "preview" | "code";
   showDiff: boolean;
+  versionIndex: number;
 };
 
 type ArtifactContextValue = {
@@ -42,6 +45,7 @@ export function ArtifactProvider({ children }: { children: ReactNode }) {
     id: 0,
     view: "preview",
     showDiff: false,
+    versionIndex: 0,
   });
 
   const open = useCallback((next: Artifact, options?: OpenOptions) => {
@@ -51,6 +55,7 @@ export function ArtifactProvider({ children }: { children: ReactNode }) {
       id: request.id + 1,
       view: options?.showDiff ? "code" : (options?.view ?? "preview"),
       showDiff: options?.showDiff ?? false,
+      versionIndex: options?.versionIndex ?? next.versions.length - 1,
     }));
   }, []);
 

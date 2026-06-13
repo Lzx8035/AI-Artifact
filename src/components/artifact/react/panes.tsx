@@ -13,11 +13,7 @@ import {
   useSandpackNavigation,
 } from "@codesandbox/sandpack-react";
 
-import {
-  currentVersion,
-  previousVersion,
-  type ReactArtifact,
-} from "@/lib/artifact";
+import { type ReactArtifact } from "@/lib/artifact";
 import { IconButton } from "@/components/artifact/icon-button";
 import { FileTreeToggle } from "@/components/artifact/file-tree-toggle";
 import { DiffToggle } from "@/components/artifact/diff-toggle";
@@ -173,6 +169,7 @@ function ActiveFilePath() {
 
 export function ReactPanes({
   artifact,
+  versionIndex,
   view,
   showFileTree,
   onToggleFileTree,
@@ -180,14 +177,16 @@ export function ReactPanes({
   onToggleDiff,
 }: {
   artifact: ReactArtifact;
+  versionIndex: number;
   view: View;
   showFileTree: boolean;
   onToggleFileTree: () => void;
   showDiff: boolean;
   onToggleDiff: () => void;
 }) {
-  const files = currentVersion(artifact.versions);
-  const previousFiles = previousVersion(artifact.versions);
+  const files = artifact.versions[versionIndex];
+  const previousFiles =
+    versionIndex > 0 ? artifact.versions[versionIndex - 1] : null;
   // diff 对比的是快照 v(n-1) → v(n),即「AI 本次改动」,与编辑器实时编辑无关。
   const diffActive = showDiff && previousFiles !== null;
 

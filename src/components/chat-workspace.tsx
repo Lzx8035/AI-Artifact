@@ -22,15 +22,15 @@ import { sampleHtmlArtifact } from "@/lib/sample/html-demo";
 import { sampleReactArtifact } from "@/lib/sample/react-demo";
 
 /**
- * 卡片右侧的打开按钮组:「预览 / 代码」,v2 卡片追加「改动」(直达 diff)。
- * 点哪个就打开到哪个视图。
+ * 卡片右侧的打开按钮组:「预览 / 代码」,非首版追加「改动」(直达该版本的 diff)。
+ * 每张卡绑定自己的 versionIndex——打开后定位到该版本,改动 = 该版本 vs 上一版。
  */
 function CardOpenActions({
   artifact,
-  withDiff = false,
+  versionIndex,
 }: {
   artifact: Artifact;
-  withDiff?: boolean;
+  versionIndex: number;
 }) {
   const { open } = useArtifact();
   const itemClass =
@@ -40,22 +40,22 @@ function CardOpenActions({
     <div className="inline-flex shrink-0 overflow-hidden rounded-lg border border-zinc-200">
       <button
         className={itemClass}
-        onClick={() => open(artifact)}
+        onClick={() => open(artifact, { versionIndex })}
         type="button"
       >
         预览
       </button>
       <button
         className={`${itemClass} border-l border-zinc-200`}
-        onClick={() => open(artifact, { view: "code" })}
+        onClick={() => open(artifact, { view: "code", versionIndex })}
         type="button"
       >
         代码
       </button>
-      {withDiff ? (
+      {versionIndex > 0 ? (
         <button
           className={`${itemClass} border-l border-zinc-200`}
-          onClick={() => open(artifact, { showDiff: true })}
+          onClick={() => open(artifact, { showDiff: true, versionIndex })}
           type="button"
         >
           改动
@@ -124,7 +124,7 @@ function ChatPanel() {
                         HTML · CSS · JavaScript
                       </p>
                     </div>
-                    <CardOpenActions artifact={sampleHtmlArtifact} />
+                    <CardOpenActions artifact={sampleHtmlArtifact} versionIndex={0} />
                   </div>
                   <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
                     <span>index.html</span>
@@ -169,7 +169,7 @@ function ChatPanel() {
                       </p>
                       <p className="text-xs text-zinc-500">v2 · 深色模式</p>
                     </div>
-                    <CardOpenActions artifact={sampleHtmlArtifact} withDiff />
+                    <CardOpenActions artifact={sampleHtmlArtifact} versionIndex={1} />
                   </div>
                   <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
                     <span>index.html</span>
@@ -214,7 +214,7 @@ function ChatPanel() {
                         React · canvas-confetti
                       </p>
                     </div>
-                    <CardOpenActions artifact={sampleReactArtifact} />
+                    <CardOpenActions artifact={sampleReactArtifact} versionIndex={0} />
                   </div>
                   <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
                     <span>App.js</span>
@@ -257,7 +257,7 @@ function ChatPanel() {
                       </p>
                       <p className="text-xs text-zinc-500">v2 · 庆祝历史</p>
                     </div>
-                    <CardOpenActions artifact={sampleReactArtifact} />
+                    <CardOpenActions artifact={sampleReactArtifact} versionIndex={1} />
                   </div>
                   <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
                     <span>History.js 新增</span>
@@ -300,7 +300,7 @@ function ChatPanel() {
                       </p>
                       <p className="text-xs text-zinc-500">v3 · 清空历史</p>
                     </div>
-                    <CardOpenActions artifact={sampleReactArtifact} withDiff />
+                    <CardOpenActions artifact={sampleReactArtifact} versionIndex={2} />
                   </div>
                   <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
                     <span>History.js</span>
@@ -350,10 +350,25 @@ function ChatPanel() {
 }
 
 function WorkspaceLayout() {
-  const { isOpen } = useArtifact();
+  // demo 侧状态(组件本体不依赖它,这里把值作为 props 喂给受控的 ArtifactWorkspace)。
+  const { artifact, isOpen, openRequest, close } = useArtifact();
   // 工作区(尤其 react kind 的 Sandpack 实例)较重,按断点只挂载一份;
   // ChatPanel 保持双挂载(成本低,且 SSR 渲染稳定)。
   const isDesktop = useIsDesktop();
+
+  // key=openRequest.id:每次 open()(含同一 artifact 再次打开)重挂工作区,
+  // 让 initialView/initialShowDiff 按本次打开意图重新生效。
+  const workspace =
+    isOpen && artifact ? (
+      <ArtifactWorkspace
+        artifact={artifact}
+        initialShowDiff={openRequest.showDiff}
+        initialView={openRequest.view}
+        key={openRequest.id}
+        onClose={close}
+        versionIndex={openRequest.versionIndex}
+      />
+    ) : null;
 
   return (
     <main className="h-dvh min-h-[560px] overflow-hidden bg-white text-zinc-950">
@@ -370,14 +385,14 @@ function WorkspaceLayout() {
           <Panel id="chat" minSize="320px">
             <ChatPanel />
           </Panel>
-          {isOpen && isDesktop ? (
+          {workspace && isDesktop ? (
             <>
               <Separator className="group relative w-px bg-zinc-200 outline-none transition-colors focus-visible:bg-zinc-500 data-[separator=hover]:bg-zinc-400 data-[separator=active]:bg-zinc-500">
                 <span className="absolute inset-y-0 left-1/2 w-3 -translate-x-1/2" />
                 <span className="pointer-events-none absolute left-1/2 top-1/2 h-10 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-zinc-300 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
               </Separator>
               <Panel id="artifact" minSize="420px">
-                <ArtifactWorkspace />
+                {workspace}
               </Panel>
             </>
           ) : null}
@@ -386,10 +401,8 @@ function WorkspaceLayout() {
 
       <div className="h-full md:hidden">
         <ChatPanel />
-        {isOpen && !isDesktop ? (
-          <div className="fixed inset-0 z-50 bg-white">
-            <ArtifactWorkspace />
-          </div>
+        {workspace && !isDesktop ? (
+          <div className="fixed inset-0 z-50 bg-white">{workspace}</div>
         ) : null}
       </div>
     </main>

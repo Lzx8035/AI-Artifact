@@ -39,9 +39,10 @@ src/
 │  ├─ page.tsx                # 渲染 <ChatWorkspace />
 │  └─ globals.css             # 全局样式
 ├─ components/
-│  ├─ chat-workspace.tsx       # 整体布局:对话面板 + 分栏 + 工作区(桌面/移动端)
-│  └─ artifact/
-│     ├─ workspace.tsx         # 工作区外壳:顶栏 + 预览/代码切换,按 kind 分发面板
+│  ├─ chat-workspace.tsx       # 【demo 侧】整体布局:对话 + 分栏 + 喂数据给工作区
+│  └─ artifact/                # 【组件侧】受控、不依赖 demo 状态,可独立接入
+│     ├─ index.ts              # 对外 API:导出 ArtifactWorkspace + 类型
+│     ├─ workspace.tsx         # 受控外壳:props 驱动,顶栏 + 预览/代码切换,按 kind 分发
 │     ├─ html/
 │     │  ├─ preview.tsx        # html 档预览面板:地址栏 + 刷新/新窗口 + iframe
 │     │  └─ code.tsx           # html 档代码面板:文件列表 + 复制 + prism 高亮
@@ -52,7 +53,7 @@ src/
 │     ├─ file-tree-toggle.tsx  # 文件列表显隐按钮(⌘B)
 │     └─ icon-button.tsx       # 共享的图标按钮(带 Tooltip)
 ├─ hooks/
-│  ├─ use-artifact.tsx         # 面板开关 + 当前 artifact + 打开意图(Context + hook)
+│  ├─ use-artifact.tsx         # 【demo 侧】打开/关闭 + 当前 artifact + 打开意图
 │  └─ use-is-desktop.ts        # md 断点检测,保证工作区只挂载一份
 └─ lib/
    ├─ artifact.ts              # Artifact 数据模型(html | react 联合,versions 快照)
@@ -62,7 +63,7 @@ src/
       ├─ html-demo.ts          # html 样例(v1 + v2 两个版本)
       ├─ focus-html/css/js.ts  # html 样例 v1 源码
       ├─ focus-v2-*.ts         # html 样例 v2 源码(深色模式)
-      └─ react-demo.ts         # react 样例(v1 + v2,多目录 + npm 依赖)
+      └─ react-demo.ts         # react 样例(v1 + v2 + v3,多目录 + npm 依赖)
 ```
 
 ## 数据模型
@@ -85,6 +86,26 @@ type ReactArtifact = {
 
 type Artifact = HtmlArtifact | ReactArtifact;
 ```
+
+## 作为组件接入
+
+`components/artifact/` 是**受控组件,不依赖任何 demo 状态**(对话、`useArtifact` 都在 demo 侧)。接入方拿到 `Artifact` 数据、自己管打开/关闭即可,组件本体无需改动:
+
+```tsx
+import { ArtifactWorkspace, type Artifact } from "@/components/artifact";
+
+<ArtifactWorkspace
+  artifact={artifact}            // 数据由外部喂(后端 / 流)
+  onClose={() => setOpen(false)} // 关闭回调
+  versionIndex={1}               // 可选:定位到某个版本(默认最新版)
+  initialView="code"             // 可选:初始视图(默认 preview)
+  initialShowDiff                // 可选:打开即展开 diff 审阅
+/>
+```
+
+- 「再次打开时重置到某视图/版本」由调用方控制——给组件一个变化的 `key` 触发重挂即可(demo 里用 `openRequest.id`)。
+- 预览/代码/diff 都相对 `versionIndex` 计算;`versionIndex > 0` 时 diff 开关才出现。
+- demo 侧的 [`use-artifact.tsx`](src/hooks/use-artifact.tsx) 只是这个演示用来管"当前打开哪个 artifact"的状态;真实产品换成自己的状态管理即可。
 
 ## Diff 审阅
 
