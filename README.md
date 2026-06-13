@@ -1,5 +1,7 @@
 # Artifact 对话示例
 
+🔗 在线演示:[ai-artifact-demo.vercel.app](https://ai-artifact-demo.vercel.app/)
+
 一个静态的、Claude 风格的「对话 + Artifact 工作区」演示。左侧是模拟对话,右侧是可预览、可看源码的 Artifact 工作区,中间分隔线可拖拽调整宽度。**不连接任何 AI 服务**——所有内容来自本地样例数据。
 
 支持两种 artifact(两档预览方案):
