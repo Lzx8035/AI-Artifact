@@ -31,9 +31,11 @@ import { sampleStreamArtifact } from "@/lib/sample/stream-demo";
 function CardOpenActions({
   artifact,
   versionIndex,
+  htmlSandbox,
 }: {
   artifact: Artifact;
   versionIndex: number;
+  htmlSandbox?: "inline" | "isolated";
 }) {
   const { open } = useArtifact();
   const itemClass =
@@ -43,14 +45,14 @@ function CardOpenActions({
     <div className="inline-flex shrink-0 overflow-hidden rounded-lg border border-zinc-200">
       <button
         className={itemClass}
-        onClick={() => open(artifact, { versionIndex })}
+        onClick={() => open(artifact, { versionIndex, htmlSandbox })}
         type="button"
       >
         预览
       </button>
       <button
         className={`${itemClass} border-l border-zinc-200`}
-        onClick={() => open(artifact, { view: "code", versionIndex })}
+        onClick={() => open(artifact, { view: "code", versionIndex, htmlSandbox })}
         type="button"
       >
         代码
@@ -58,7 +60,9 @@ function CardOpenActions({
       {versionIndex > 0 ? (
         <button
           className={`${itemClass} border-l border-zinc-200`}
-          onClick={() => open(artifact, { showDiff: true, versionIndex })}
+          onClick={() =>
+            open(artifact, { showDiff: true, versionIndex, htmlSandbox })
+          }
           type="button"
         >
           改动
@@ -125,10 +129,31 @@ function ChatPanel() {
               <Sparkles aria-hidden="true" className="size-4" />
             </div>
             <div className="min-w-0 flex-1">
+              <p className="pt-1 text-[15px] leading-7 text-zinc-700">
+                没问题。预览要用隔离模式吗？如果对生成代码的来源不完全放心，
+                建议开启——会注入 CSP 切断外联，让代码跑得起来但连不出去。
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <div className="max-w-[82%] rounded-2xl rounded-tr-md bg-zinc-100 px-4 py-3 text-[15px] leading-6 text-zinc-900">
+              用隔离模式吧。
+            </div>
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white">
+              <User aria-hidden="true" className="size-4" />
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-sm">
+              <Sparkles aria-hidden="true" className="size-4" />
+            </div>
+            <div className="min-w-0 flex-1">
               <div className="flex flex-col gap-3 text-[15px] leading-7 text-zinc-700">
                 <p>
-                  已经为你生成了一个静态产品介绍页。页面使用原生 HTML、CSS 和
-                  JavaScript，可以直接预览并查看每个文件。
+                  好的，已按隔离模式生成产品介绍页。页面使用原生 HTML、CSS 和
+                  JavaScript，预览已切断外联，可以直接查看每个文件。
                 </p>
                 <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
                   <div className="flex items-center gap-3 border-b border-zinc-100 px-4 py-3">
@@ -143,7 +168,7 @@ function ChatPanel() {
                         HTML · CSS · JavaScript
                       </p>
                     </div>
-                    <CardOpenActions artifact={sampleHtmlArtifact} versionIndex={0} />
+                    <CardOpenActions artifact={sampleHtmlArtifact} htmlSandbox="isolated" versionIndex={0} />
                   </div>
                   <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
                     <span>index.html</span>
@@ -188,7 +213,7 @@ function ChatPanel() {
                       </p>
                       <p className="text-xs text-zinc-500">v2 · 深色模式</p>
                     </div>
-                    <CardOpenActions artifact={sampleHtmlArtifact} versionIndex={1} />
+                    <CardOpenActions artifact={sampleHtmlArtifact} htmlSandbox="isolated" versionIndex={1} />
                   </div>
                   <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
                     <span>index.html</span>
@@ -432,6 +457,7 @@ function WorkspaceLayout() {
     isOpen && shownArtifact ? (
       <ArtifactWorkspace
         artifact={shownArtifact}
+        htmlSandbox={openRequest.htmlSandbox}
         initialShowDiff={openRequest.showDiff}
         initialView={openRequest.view}
         key={openRequest.id}

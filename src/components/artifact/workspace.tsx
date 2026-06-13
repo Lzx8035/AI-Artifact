@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { FileCode2, X } from "lucide-react";
 
 import { toFileMap, toFiles, type Artifact } from "@/lib/artifact";
-import { buildPreviewDocument } from "@/lib/build-preview";
 import { IconButton } from "@/components/artifact/icon-button";
 import { HtmlPreview } from "@/components/artifact/html/preview";
 import { HtmlCode } from "@/components/artifact/html/code";
@@ -60,6 +59,8 @@ export type ArtifactWorkspaceProps = {
   initialShowDiff?: boolean;
   /** 定位到哪个版本(默认最新版);预览/代码/diff 都相对该版本。 */
   versionIndex?: number;
+  /** html 预览的初始隔离模式(默认 inline);isolated 注入严格 CSP 切断外联。 */
+  htmlSandbox?: "inline" | "isolated";
 };
 
 /**
@@ -73,6 +74,7 @@ export function ArtifactWorkspace({
   initialView = "preview",
   initialShowDiff = false,
   versionIndex,
+  htmlSandbox = "inline",
 }: ArtifactWorkspaceProps) {
   // 缺省定位到最新版;index>0 时才有可对比的上一版(diff 开关据此显隐)。
   const index = versionIndex ?? artifact.versions.length - 1;
@@ -116,13 +118,6 @@ export function ArtifactWorkspace({
   const files = useMemo(
     () =>
       artifact.kind === "html" ? toFiles(artifact.versions[index]) : [],
-    [artifact, index],
-  );
-  const previewDocument = useMemo(
-    () =>
-      artifact.kind === "html"
-        ? buildPreviewDocument(artifact.versions[index])
-        : "",
     [artifact, index],
   );
   // html 档的 diff 数据(该版本 vs 上一版;无上一版则 null,面板据此隐藏 diff 开关)
@@ -173,8 +168,9 @@ export function ArtifactWorkspace({
         ) : artifact.kind === "html" ? (
           <>
             <HtmlPreview
+              files={artifact.versions[index]}
               hidden={view !== "preview"}
-              previewDocument={previewDocument}
+              sandboxMode={htmlSandbox}
               title={artifact.title}
             />
             {hasVisitedCode || view === "code" ? (

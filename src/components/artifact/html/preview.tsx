@@ -1,20 +1,68 @@
 "use client";
 
-import { useState } from "react";
-import { ExternalLink, Globe, RefreshCw } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  ExternalLink,
+  Globe,
+  RefreshCw,
+  Shield,
+  ShieldCheck,
+} from "lucide-react";
 
+import type { HtmlFiles } from "@/lib/artifact";
+import { buildPreviewDocument } from "@/lib/build-preview";
 import { IconButton } from "@/components/artifact/icon-button";
 
+type SandboxMode = "inline" | "isolated";
+
+/**
+ * 隔离状态指示器:只读。隔离与否取决于内容可信度,由集成方通过 prop 决定,
+ * 不提供运行时切换——能关闭隔离的 UI 本身就是安全隐患(降级 footgun)。
+ */
+function SandboxIndicator({ isolated }: { isolated: boolean }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs ${
+        isolated
+          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+          : "border-zinc-200 bg-white text-zinc-400"
+      }`}
+      title={
+        isolated
+          ? "隔离模式:已注入 CSP 切断外联,适合不可信代码"
+          : "普通模式:同源沙箱,未切断外联(适合可信内容)"
+      }
+    >
+      {isolated ? (
+        <ShieldCheck aria-hidden="true" className="size-3.5" />
+      ) : (
+        <Shield aria-hidden="true" className="size-3.5" />
+      )}
+      {isolated ? "已隔离" : "未隔离"}
+    </span>
+  );
+}
+
 export function HtmlPreview({
-  previewDocument,
+  files,
   title,
   hidden,
+  sandboxMode = "inline",
 }: {
-  previewDocument: string;
+  files: HtmlFiles;
   title: string;
   hidden: boolean;
+  /** inline = 同源 srcDoc(快,适合可信);isolated = 注入严格 CSP 切断外联。
+   *  由集成方决定,运行时只读、不可切换。 */
+  sandboxMode?: SandboxMode;
 }) {
   const [previewKey, setPreviewKey] = useState(0);
+  const isolated = sandboxMode === "isolated";
+
+  const previewDocument = useMemo(
+    () => buildPreviewDocument(files, { isolated }),
+    [files, isolated],
+  );
 
   function openInNewWindow() {
     const previewBlob = new Blob([previewDocument], { type: "text/html" });
@@ -26,9 +74,12 @@ export function HtmlPreview({
   return (
     <div className={hidden ? "hidden" : "flex h-full min-h-0 flex-col"}>
       <div className="flex h-9 shrink-0 items-center justify-between border-b border-zinc-200 bg-zinc-50 px-2">
-        <span className="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2.5 py-1 font-mono text-xs text-zinc-400">
-          <Globe aria-hidden="true" className="size-3.5" />/
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2.5 py-1 font-mono text-xs text-zinc-400">
+            <Globe aria-hidden="true" className="size-3.5" />/
+          </span>
+          <SandboxIndicator isolated={isolated} />
+        </div>
         <div className="flex items-center gap-0.5">
           <IconButton
             label="刷新预览"

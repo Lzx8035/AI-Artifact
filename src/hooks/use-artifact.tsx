@@ -20,6 +20,8 @@ type OpenOptions = {
   versionIndex?: number;
   /** 以流式生成的方式播放该版本(demo:逐字揭示)。 */
   stream?: boolean;
+  /** html 预览的隔离模式(默认 inline)。 */
+  htmlSandbox?: "inline" | "isolated";
 };
 
 type OpenRequest = {
@@ -29,6 +31,7 @@ type OpenRequest = {
   showDiff: boolean;
   versionIndex: number;
   stream: boolean;
+  htmlSandbox: "inline" | "isolated";
 };
 
 type ArtifactContextValue = {
@@ -50,6 +53,7 @@ export function ArtifactProvider({ children }: { children: ReactNode }) {
     showDiff: false,
     versionIndex: 0,
     stream: false,
+    htmlSandbox: "inline",
   });
 
   const open = useCallback((next: Artifact, options?: OpenOptions) => {
@@ -66,6 +70,7 @@ export function ArtifactProvider({ children }: { children: ReactNode }) {
       showDiff: options?.showDiff ?? false,
       versionIndex: options?.versionIndex ?? next.versions.length - 1,
       stream: options?.stream ?? false,
+      htmlSandbox: options?.htmlSandbox ?? "inline",
     }));
   }, []);
 

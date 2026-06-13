@@ -4,15 +4,15 @@
 
 支持两种 artifact(两档预览方案):
 
-| kind | 预览方式 | 适用 | 样例 |
-|---|---|---|---|
-| `html` | 自装配 `<iframe srcDoc>`,无在线沙箱 | 静态 HTML/CSS/JS | 产品介绍页 |
+| kind    | 预览方式                                        | 适用             | 样例                            |
+| ------- | ----------------------------------------------- | ---------------- | ------------------------------- |
+| `html`  | 自装配 `<iframe srcDoc>`,无在线沙箱             | 静态 HTML/CSS/JS | 产品介绍页                      |
 | `react` | **Sandpack** 真实打包(npm 依赖、可编辑、热更新) | React + npm 依赖 | React 庆祝按钮(canvas-confetti) |
 
 ## 技术栈
 
 - **Next.js 16** (App Router) + **React 19**
-- **HeroUI** —  按钮、Tabs、Tooltip、Toast 等组件
+- **HeroUI** — 按钮、Tabs、Tooltip、Toast 等组件
 - **react-resizable-panels** — 可拖拽的左右分栏
 - **prism-react-renderer** — html artifact 代码视图的语法高亮
 - **@codesandbox/sandpack-react** — react artifact 的打包预览与可编辑代码
@@ -84,8 +84,8 @@ type HtmlArtifact = {
 type ReactArtifact = {
   kind: "react";
   title: string;
-  versions: Array<Record<string, string>>;  // Sandpack 文件快照,如 "/App.js"
-  dependencies?: Record<string, string>;    // npm 依赖
+  versions: Array<Record<string, string>>; // Sandpack 文件快照,如 "/App.js"
+  dependencies?: Record<string, string>; // npm 依赖
 };
 
 type Artifact = HtmlArtifact | ReactArtifact;
@@ -101,12 +101,13 @@ type Artifact = HtmlArtifact | ReactArtifact;
 import { ArtifactWorkspace, type Artifact } from "@/components/artifact";
 
 <ArtifactWorkspace
-  artifact={artifact}            // 数据由外部喂(后端 / 流)
+  artifact={artifact} // 数据由外部喂(后端 / 流)
   onClose={() => setOpen(false)} // 关闭回调
-  versionIndex={1}               // 可选:定位到某个版本(默认最新版)
-  initialView="code"             // 可选:初始视图(默认 preview)
-  initialShowDiff                // 可选:打开即展开 diff 审阅
-/>
+  versionIndex={1} // 可选:定位到某个版本(默认最新版)
+  initialView="code" // 可选:初始视图(默认 preview)
+  initialShowDiff // 可选:打开即展开 diff 审阅
+  htmlSandbox="isolated" // 可选:html 预览的初始隔离模式(默认 inline)
+/>;
 ```
 
 - 「再次打开时重置到某视图/版本」由调用方控制——给组件一个变化的 `key` 触发重挂即可(demo 里用 `openRequest.id`)。
@@ -125,25 +126,49 @@ html 档的 `buildPreviewDocument()` 采用**注入式**装配:把 `<style>` 注
 
 要换预览内容:html 样例改 [`src/lib/sample/`](src/lib/sample) 下的 `focus-*.ts`;react 样例改 [`react-demo.ts`](src/lib/sample/react-demo.ts)(文件与依赖都在里面)。
 
+## 预览隔离与隐私
+
+预览不可信的 AI 生成代码时,隔离很重要。本组件提供两档,**由集成方通过 `htmlSandbox` prop 决定**——运行时只在工具栏只读展示当前状态(已隔离 / 未隔离),**不提供切换**:能关闭隔离的 UI 本身就是降级 footgun(可被诱导关掉保护),隔离与否应取决于内容可信度,由接入方在数据/接入层判定:
+
+| 模式           | 做法                                                                                       | 适用                               |
+| -------------- | ------------------------------------------------------------------------------------------ | ---------------------------------- |
+| `inline`(默认) | `srcDoc` + `sandbox="allow-scripts"`(opaque origin,无 `allow-same-origin`)                 | 可信内容,加载快                    |
+| `isolated`     | 额外注入严格 CSP:`default-src 'none'` 切断一切外联(脚本无法 fetch/上报、外部字体/图片被拦) | 不可信代码——跑得起来但「连不出去」 |
+
+**实现方式**:两档都是同一个 `<iframe srcDoc>`,隔离靠两层叠加——
+
+1. **iframe `sandbox="allow-scripts"`**(两档都有):内容处于 opaque origin,脚本能跑但碰不到我们页面的 DOM / cookie / localStorage,也禁了表单提交、弹窗、顶层跳转。这是「进不来」的一层。
+2. **注入的 CSP `<meta>`**(仅 isolated):由 [`buildPreviewDocument()`](src/lib/build-preview.ts) 在装配文档时往 `<head>` 注入 `default-src 'none'; …`,切断一切网络出口。这是「出不去」的一层。
+
+即:`inline` = iframe sandbox;`isolated` = iframe sandbox **+** CSP。
+
+**为什么只有 html 需要这个开关**:html 档把 AI 代码直接跑在**我们自己页面 origin** 的 iframe 里,所以得我们主动用 CSP 切断它的外联(否则脚本能 fetch 上报、外联打点)。react 档的代码则跑在 Sandpack **独立跨域 iframe**(codesandbox 的打包域)里,浏览器同源策略天然把它和我们的应用隔开,无需我们再加 CSP——代价是代码被发去远程打包(见下面的隐私红线)。
+
+**仍需注意的边界**:
+
+- 两档都跑在同一页面 origin 的 iframe 里。要做到**真正的跨 origin 隔离**(连 cookie/localStorage 都摸不到),生产应把预览部署到**独立子域名**(如 `preview.yourapp.com`),本组件在单页内无法替代部署层。
+- 「在新窗口打开」走 blob URL(opaque origin),已比同源页面更隔离;因此本项目**未**做同源 `/preview` 路由(那样反而是安全剧场)。
+- **react 档的隐私红线**:Sandpack 把代码发往 **codesandbox.io 的远程打包服务**——即代码会离开浏览器。涉敏场景请仅对可信内容启用,或自托管 `sandpack-bundler`。
+
 ## 快捷键
 
-| 快捷键 | 作用 |
-|---|---|
-| `⌘B` / `Ctrl+B` | 在代码视图切换文件列表显隐 |
-| `Esc` | 关闭工作区(焦点在代码编辑器内时不触发) |
+| 快捷键          | 作用                                   |
+| --------------- | -------------------------------------- |
+| `⌘B` / `Ctrl+B` | 在代码视图切换文件列表显隐             |
+| `Esc`           | 关闭工作区(焦点在代码编辑器内时不触发) |
 
 ## 说明 / 边界
 
-- 这是一个**前端静态示例**,对话不会发送真实请求。
-- html 档 iframe 沙箱为 `allow-scripts`,适合可信样例。若要运行不可信代码,建议升级为 blob URL 或独立子域名做隔离。
-- react 档依赖 Sandpack 的**远程打包服务**(codesandbox.io):离线或网络受限时 react 预览会加载失败或很慢;html 档不受影响。首次打包期间预览区会显示加载动画。
+- 这是一个**前端静态示例**,对话不会发送真实请求。(预览隔离与隐私见上一节。)
+- react 档依赖 Sandpack 的
+  远程打包服务:离线或网络受限时 react 预览会加载失败或很慢(html 档不受影响),首次打包期间预览区会显示加载动画。
 - `next.config.ts` 中**关闭了 `reactStrictMode`**:开发模式下 StrictMode 的双挂载会与 Sandpack 客户端生命周期产生竞态(iframe 被重复加载后与打包客户端脱钩,表现为预览白屏)。如需重新开启,请先验证 react 预览仍正常。
 
 ## 命令
 
-| 命令 | 作用 |
-|---|---|
-| `npm run dev` | 启动开发服务器 |
-| `npm run build` | 生产构建 |
-| `npm run start` | 运行生产构建 |
-| `npm run lint` | ESLint 检查 |
+| 命令            | 作用           |
+| --------------- | -------------- |
+| `npm run dev`   | 启动开发服务器 |
+| `npm run build` | 生产构建       |
+| `npm run start` | 运行生产构建   |
+| `npm run lint`  | ESLint 检查    |
