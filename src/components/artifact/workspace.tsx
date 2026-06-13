@@ -5,6 +5,7 @@ import { FileCode2, X } from "lucide-react";
 
 import { toFileMap, toFiles, type Artifact } from "@/lib/artifact";
 import { IconButton } from "@/components/artifact/icon-button";
+import { ArtifactErrorBoundary } from "@/components/artifact/error-boundary";
 import { HtmlPreview } from "@/components/artifact/html/preview";
 import { HtmlCode } from "@/components/artifact/html/code";
 import { ReactPanes } from "@/components/artifact/react/panes";
@@ -163,6 +164,7 @@ export function ArtifactWorkspace({
       </header>
 
       <div className="min-h-0 flex-1">
+        <ArtifactErrorBoundary>
         {streaming ? (
           <StreamingView artifact={artifact} versionIndex={index} view={view} />
         ) : artifact.kind === "html" ? (
@@ -196,6 +198,7 @@ export function ArtifactWorkspace({
             view={view}
           />
         )}
+        </ArtifactErrorBoundary>
       </div>
     </section>
   );

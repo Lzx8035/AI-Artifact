@@ -23,6 +23,7 @@ import type { Artifact } from "@/lib/artifact";
 import { sampleHtmlArtifact } from "@/lib/sample/html-demo";
 import { sampleReactArtifact } from "@/lib/sample/react-demo";
 import { sampleStreamArtifact } from "@/lib/sample/stream-demo";
+import { sampleErrorArtifact } from "@/lib/sample/error-demo";
 
 /**
  * 卡片右侧的打开按钮组:「预览 / 代码」,非首版追加「改动」(直达该版本的 diff)。
@@ -392,6 +393,54 @@ function ChatPanel() {
                     <span>App.js</span>
                     <span>components/</span>
                     <span>styles.css</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <div className="max-w-[82%] rounded-2xl rounded-tr-md bg-zinc-100 px-4 py-3 text-[15px] leading-6 text-zinc-900">
+              再写个小看板,展示本周数据总计。
+            </div>
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white">
+              <User aria-hidden="true" className="size-4" />
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-sm">
+              <Sparkles aria-hidden="true" className="size-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-col gap-3 text-[15px] leading-7 text-zinc-700">
+                <p>
+                  生成了一个数据看板。
+                  <span className="text-zinc-500">
+                    (这个示例故意留了个 bug——脚本引用了未定义的变量,打开预览会
+                    触发错误横幅,演示预览的运行时错误捕获。)
+                  </span>
+                </p>
+                <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
+                  <div className="flex items-center gap-3 border-b border-zinc-100 px-4 py-3">
+                    <div className="flex size-9 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700">
+                      <Code2 aria-hidden="true" className="size-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-zinc-950">
+                        {sampleErrorArtifact.title}
+                      </p>
+                      <p className="text-xs text-zinc-500">HTML · 含运行时报错</p>
+                    </div>
+                    <CardOpenActions
+                      artifact={sampleErrorArtifact}
+                      versionIndex={0}
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
+                    <span>index.html</span>
+                    <span>styles.css</span>
+                    <span>script.js</span>
                   </div>
                 </div>
               </div>

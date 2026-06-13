@@ -10,6 +10,16 @@ const ISOLATED_CSP =
   "img-src data: blob:; font-src data:; connect-src 'none'; form-action 'none'";
 
 /**
+ * 注入到预览文档最前面的错误捕获:把运行时错误/未处理拒绝 postMessage 回父窗口,
+ * 由 HtmlPreview 展示错误横幅。postMessage 不受 CSP 约束,沙箱 iframe 也能发给 parent。
+ */
+const ERROR_CATCHER = `<script>(function(){
+  function report(msg){try{parent.postMessage({source:"artifact-preview",error:String(msg)},"*");}catch(e){}}
+  window.addEventListener("error",function(e){report(e.message||(e.error&&e.error.message)||"运行时错误");});
+  window.addEventListener("unhandledrejection",function(e){var r=e.reason;report("未处理的 Promise 拒绝: "+(r&&r.message?r.message:r));});
+})();</script>`;
+
+/**
  * 把 { html, css, js } 装配成单个可预览的 HTML 文档。
  *
  * 不依赖 html 里是否引用了样式/脚本——我们自己负责注入,因此比"用正则
@@ -34,8 +44,8 @@ export function buildPreviewDocument(
   const styleTag = css ? `<style>${css}</style>` : "";
   const scriptTag = safeJs ? `<script>${safeJs}</script>` : "";
 
-  // CSP 必须在任何外联资源之前生效,放 <head> 最前(没有 </head> 就前置)。
-  const headInjection = `${cspTag}${styleTag}`;
+  // CSP 必须最先生效;错误捕获要早于用户脚本注册;最后才是样式。
+  const headInjection = `${cspTag}${ERROR_CATCHER}${styleTag}`;
 
   let document = html;
 

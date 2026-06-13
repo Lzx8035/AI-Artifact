@@ -53,6 +53,7 @@ src/
 │     ├─ file-tree-toggle.tsx  # 文件列表显隐按钮(⌘B)
 │     ├─ streaming-view.tsx    # 流式生成期间的统一视图(代码渐增 + 预览占位)
 │     ├─ code-block.tsx        # 共享的只读 prism 代码块(html 代码视图 + 流式视图)
+│     ├─ error-boundary.tsx    # 兜住面板渲染崩溃的降级 UI
 │     └─ icon-button.tsx       # 共享的图标按钮(带 Tooltip)
 ├─ hooks/
 │  ├─ use-artifact.tsx         # 【demo 侧】打开/关闭 + 当前 artifact + 打开意图
@@ -67,7 +68,8 @@ src/
       ├─ focus-html/css/js.ts  # html 样例 v1 源码
       ├─ focus-v2-*.ts         # html 样例 v2 源码(深色模式)
       ├─ react-demo.ts         # react 样例(v1 + v2 + v3,多目录 + npm 依赖)
-      └─ stream-demo.ts        # 流式生成 demo 样例(实时时钟,单版本)
+      ├─ stream-demo.ts        # 流式生成 demo 样例(实时时钟,单版本)
+      └─ error-demo.ts         # 错误态 demo 样例(故意留运行时 bug)
 ```
 
 ## 数据模型
@@ -149,6 +151,12 @@ html 档的 `buildPreviewDocument()` 采用**注入式**装配:把 `<style>` 注
 - 两档都跑在同一页面 origin 的 iframe 里。要做到**真正的跨 origin 隔离**(连 cookie/localStorage 都摸不到),生产应把预览部署到**独立子域名**(如 `preview.yourapp.com`),本组件在单页内无法替代部署层。
 - 「在新窗口打开」走 blob URL(opaque origin),已比同源页面更隔离;因此本项目**未**做同源 `/preview` 路由(那样反而是安全剧场)。
 - **react 档的隐私红线**:Sandpack 把代码发往 **codesandbox.io 的远程打包服务**——即代码会离开浏览器。涉敏场景请仅对可信内容启用,或自托管 `sandpack-bundler`。
+
+## 错误态
+
+- **html 预览运行时错误**:[`buildPreviewDocument()`](src/lib/build-preview.ts) 往文档注入错误捕获脚本(`window.onerror` / `unhandledrejection`),iframe 内的报错 `postMessage` 回父窗口,预览底部弹红色横幅(可关闭;刷新/换内容自动清除)。postMessage 不受 CSP 约束,隔离模式下同样工作。
+- **react 编译/运行时错误**:由 Sandpack 自带的错误覆盖层呈现(默认开启,未关闭)。
+- **渲染崩溃兜底**:工作区主体包了 [`ArtifactErrorBoundary`](src/components/artifact/error-boundary.tsx),面板(Sandpack/prism/diff)若抛错退化成降级 UI + 重试,顶栏关闭按钮仍可用,不会整页白屏。
 
 ## 快捷键
 
