@@ -141,6 +141,48 @@ function ChatPanel() {
 
           <div className="flex justify-end gap-3">
             <div className="max-w-[82%] rounded-2xl rounded-tr-md bg-zinc-100 px-4 py-3 text-[15px] leading-6 text-zinc-900">
+              产品介绍页加一个深色模式切换。
+            </div>
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white">
+              <User aria-hidden="true" className="size-4" />
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-sm">
+              <Sparkles aria-hidden="true" className="size-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-col gap-3 text-[15px] leading-7 text-zinc-700">
+                <p>
+                  已更新产品介绍页：导航栏加了「深色模式」切换按钮，CSS
+                  增加了一组暗色变量，脚本里补充了切换逻辑。可以查看具体改动。
+                </p>
+                <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
+                  <div className="flex items-center gap-3 border-b border-zinc-100 px-4 py-3">
+                    <div className="flex size-9 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700">
+                      <FileDiff aria-hidden="true" className="size-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-zinc-950">
+                        {sampleHtmlArtifact.title}
+                      </p>
+                      <p className="text-xs text-zinc-500">v2 · 深色模式</p>
+                    </div>
+                    <CardOpenActions artifact={sampleHtmlArtifact} withDiff />
+                  </div>
+                  <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
+                    <span>index.html</span>
+                    <span>styles.css</span>
+                    <span>script.js</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <div className="max-w-[82%] rounded-2xl rounded-tr-md bg-zinc-100 px-4 py-3 text-[15px] leading-6 text-zinc-900">
               再来一个 React 版本的试试，要用到 npm 依赖。
             </div>
             <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white">
@@ -186,48 +228,6 @@ function ChatPanel() {
 
           <div className="flex justify-end gap-3">
             <div className="max-w-[82%] rounded-2xl rounded-tr-md bg-zinc-100 px-4 py-3 text-[15px] leading-6 text-zinc-900">
-              产品介绍页加一个深色模式切换。
-            </div>
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white">
-              <User aria-hidden="true" className="size-4" />
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-sm">
-              <Sparkles aria-hidden="true" className="size-4" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-col gap-3 text-[15px] leading-7 text-zinc-700">
-                <p>
-                  已更新产品介绍页：导航栏加了「深色模式」切换按钮，CSS
-                  增加了一组暗色变量，脚本里补充了切换逻辑。可以查看具体改动。
-                </p>
-                <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
-                  <div className="flex items-center gap-3 border-b border-zinc-100 px-4 py-3">
-                    <div className="flex size-9 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700">
-                      <FileDiff aria-hidden="true" className="size-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-zinc-950">
-                        {sampleHtmlArtifact.title}
-                      </p>
-                      <p className="text-xs text-zinc-500">v2 · 深色模式</p>
-                    </div>
-                    <CardOpenActions artifact={sampleHtmlArtifact} withDiff />
-                  </div>
-                  <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
-                    <span>index.html</span>
-                    <span>styles.css</span>
-                    <span>script.js</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3">
-            <div className="max-w-[82%] rounded-2xl rounded-tr-md bg-zinc-100 px-4 py-3 text-[15px] leading-6 text-zinc-900">
               庆祝按钮加一个历史记录。
             </div>
             <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white">
@@ -244,7 +244,50 @@ function ChatPanel() {
                 <p>
                   已更新 React
                   组件：新增了 History 组件展示最近五次庆祝，useCelebration
-                  里记录历史，样式同步补充。可以查看具体改动。
+                  里记录历史，样式同步补充。
+                </p>
+                <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
+                  <div className="flex items-center gap-3 border-b border-zinc-100 px-4 py-3">
+                    <div className="flex size-9 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700">
+                      <Atom aria-hidden="true" className="size-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-zinc-950">
+                        {sampleReactArtifact.title}
+                      </p>
+                      <p className="text-xs text-zinc-500">v2 · 庆祝历史</p>
+                    </div>
+                    <CardOpenActions artifact={sampleReactArtifact} />
+                  </div>
+                  <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
+                    <span>History.js 新增</span>
+                    <span>useCelebration.js</span>
+                    <span>App.js</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <div className="max-w-[82%] rounded-2xl rounded-tr-md bg-zinc-100 px-4 py-3 text-[15px] leading-6 text-zinc-900">
+              历史记录加一个清空按钮。
+            </div>
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white">
+              <User aria-hidden="true" className="size-4" />
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-sm">
+              <Sparkles aria-hidden="true" className="size-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-col gap-3 text-[15px] leading-7 text-zinc-700">
+                <p>
+                  已更新 React
+                  组件：在历史卡片标题旁加了「清空」按钮，useCelebration
+                  里补充了 clearHistory。改动在 v2 的基础上。
                 </p>
                 <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
                   <div className="flex items-center gap-3 border-b border-zinc-100 px-4 py-3">
@@ -255,12 +298,12 @@ function ChatPanel() {
                       <p className="truncate text-sm font-medium text-zinc-950">
                         {sampleReactArtifact.title}
                       </p>
-                      <p className="text-xs text-zinc-500">v2 · 庆祝历史</p>
+                      <p className="text-xs text-zinc-500">v3 · 清空历史</p>
                     </div>
                     <CardOpenActions artifact={sampleReactArtifact} withDiff />
                   </div>
                   <div className="grid grid-cols-3 divide-x divide-zinc-100 px-2 py-3 text-center text-xs text-zinc-500">
-                    <span>History.js 新增</span>
+                    <span>History.js</span>
                     <span>useCelebration.js</span>
                     <span>App.js</span>
                   </div>
@@ -317,26 +360,28 @@ function WorkspaceLayout() {
       <ToastProvider placement="bottom end" />
 
       <div className="hidden h-full md:block">
-        {isOpen && isDesktop ? (
-          <Group
-            className="h-full"
-            defaultLayout={{ artifact: 58, chat: 42 }}
-            orientation="horizontal"
-          >
-            <Panel id="chat" minSize="320px">
-              <ChatPanel />
-            </Panel>
-            <Separator className="group relative w-px bg-zinc-200 outline-none transition-colors focus-visible:bg-zinc-500 data-[separator=hover]:bg-zinc-400 data-[separator=active]:bg-zinc-500">
-              <span className="absolute inset-y-0 left-1/2 w-3 -translate-x-1/2" />
-              <span className="pointer-events-none absolute left-1/2 top-1/2 h-10 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-zinc-300 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
-            </Separator>
-            <Panel id="artifact" minSize="420px">
-              <ArtifactWorkspace />
-            </Panel>
-          </Group>
-        ) : (
-          <ChatPanel />
-        )}
+        {/* Group 与 chat Panel 始终挂载,只条件渲染分隔条 + artifact 面板,
+            避免打开/关闭时 ChatPanel 重新挂载导致滚动位置丢失。 */}
+        <Group
+          className="h-full"
+          defaultLayout={{ artifact: 58, chat: 42 }}
+          orientation="horizontal"
+        >
+          <Panel id="chat" minSize="320px">
+            <ChatPanel />
+          </Panel>
+          {isOpen && isDesktop ? (
+            <>
+              <Separator className="group relative w-px bg-zinc-200 outline-none transition-colors focus-visible:bg-zinc-500 data-[separator=hover]:bg-zinc-400 data-[separator=active]:bg-zinc-500">
+                <span className="absolute inset-y-0 left-1/2 w-3 -translate-x-1/2" />
+                <span className="pointer-events-none absolute left-1/2 top-1/2 h-10 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-zinc-300 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
+              </Separator>
+              <Panel id="artifact" minSize="420px">
+                <ArtifactWorkspace />
+              </Panel>
+            </>
+          ) : null}
+        </Group>
       </div>
 
       <div className="h-full md:hidden">

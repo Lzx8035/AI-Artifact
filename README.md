@@ -98,6 +98,13 @@ html 档的 `buildPreviewDocument()` 采用**注入式**装配:把 `<style>` 注
 
 要换预览内容:html 样例改 [`src/lib/sample/`](src/lib/sample) 下的 `focus-*.ts`;react 样例改 [`react-demo.ts`](src/lib/sample/react-demo.ts)(文件与依赖都在里面)。
 
+## 快捷键
+
+| 快捷键 | 作用 |
+|---|---|
+| `⌘B` / `Ctrl+B` | 在代码视图切换文件列表显隐 |
+| `Esc` | 关闭工作区(焦点在代码编辑器内时不触发) |
+
 ## 说明 / 边界
 
 - 这是一个**前端静态示例**,对话不会发送真实请求。

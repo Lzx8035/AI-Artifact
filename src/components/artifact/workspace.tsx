@@ -75,18 +75,27 @@ export function ArtifactWorkspace() {
     setHasVisitedCode(true);
   }
 
-  // 文件列表开关:⌘B / Ctrl+B 切换(仿 VS Code),两种 kind 共用。
+  // 快捷键:⌘B/Ctrl+B 切文件列表(仿 VS Code)、Esc 关闭工作区。
   const [showFileTree, setShowFileTree] = useState(true);
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "b") {
         event.preventDefault();
         setShowFileTree((current) => !current);
+        return;
+      }
+      if (event.key === "Escape") {
+        // 正在代码编辑器/输入框里时不抢 Esc,避免打断编辑。
+        const target = event.target as HTMLElement | null;
+        if (target?.closest(".cm-editor, input, textarea, [contenteditable]")) {
+          return;
+        }
+        close();
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [close]);
 
   const files = useMemo(
     () =>

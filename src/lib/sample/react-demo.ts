@@ -272,10 +272,155 @@ export function useCelebration() {
 }`,
 };
 
+// ---------- v3:AI 应用户要求给历史加「清空」按钮 ----------
+
+const v3Files: ReactFiles = {
+  "/App.js": `import Header from "./components/Header";
+import CelebrateButton from "./components/CelebrateButton";
+import History from "./components/History";
+import { useCelebration } from "./hooks/useCelebration";
+import "./styles.css";
+
+export default function App() {
+  const { count, history, celebrate, clearHistory } = useCelebration();
+
+  return (
+    <main className="stage">
+      <Header />
+      <CelebrateButton onCelebrate={celebrate} />
+      <p className="count">已庆祝 {count} 次</p>
+      <History records={history} onClear={clearHistory} />
+    </main>
+  );
+}`,
+  "/components/Header.js": headerJs,
+  "/components/CelebrateButton.js": celebrateButtonJs,
+  "/components/History.js": `export default function History({ records, onClear }) {
+  if (records.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="history">
+      <div className="history-head">
+        <h2>庆祝历史</h2>
+        <button className="history-clear" onClick={onClear} type="button">
+          清空
+        </button>
+      </div>
+      <ul>
+        {records.map((record) => (
+          <li key={record.id}>
+            <span>第 {record.no} 次</span>
+            <time>{record.time}</time>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}`,
+  "/hooks/useCelebration.js": `import { useState } from "react";
+import confetti from "canvas-confetti";
+
+export function useCelebration() {
+  const [count, setCount] = useState(0);
+  const [history, setHistory] = useState([]);
+
+  function celebrate() {
+    const next = count + 1;
+    setCount(next);
+    setHistory((records) =>
+      [
+        {
+          id: next,
+          no: next,
+          time: new Date().toLocaleTimeString(),
+        },
+        ...records,
+      ].slice(0, 5),
+    );
+    confetti({
+      particleCount: 90,
+      spread: 70,
+      origin: { y: 0.7 },
+    });
+  }
+
+  function clearHistory() {
+    setHistory([]);
+  }
+
+  return { count, history, celebrate, clearHistory };
+}`,
+  "/styles.css": `${baseCss}
+
+.history {
+  width: 100%;
+  max-width: 320px;
+  margin-top: 28px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #ffffff;
+  text-align: left;
+}
+
+.history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.history h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.history-clear {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.history-clear:hover {
+  color: var(--ink);
+}
+
+.history ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history li {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.history li:first-child {
+  border-top: 0;
+}
+
+.history time {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}`,
+};
+
 export const sampleReactArtifact: ReactArtifact = {
   kind: "react",
   title: "React 庆祝按钮",
-  versions: [v1Files, v2Files],
+  versions: [v1Files, v2Files, v3Files],
   dependencies: {
     "canvas-confetti": "1.9.3",
   },
