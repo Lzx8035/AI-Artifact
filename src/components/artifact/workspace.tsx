@@ -190,6 +190,7 @@ export function ArtifactWorkspace({
                 onToggleFileTree={() => setShowFileTree((c) => !c)}
                 showDiff={showDiff}
                 showFileTree={showFileTree}
+                title={artifact.title}
               />
             ) : null}
           </>

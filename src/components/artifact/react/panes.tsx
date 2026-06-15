@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Check, Copy, Globe, Loader2, RefreshCw, RotateCcw } from "lucide-react";
+import {
+  Check,
+  Copy,
+  Download,
+  Globe,
+  Loader2,
+  RefreshCw,
+  RotateCcw,
+} from "lucide-react";
 import { toast } from "@heroui/react";
 import {
   SandpackCodeEditor,
@@ -14,6 +22,7 @@ import {
 } from "@codesandbox/sandpack-react";
 
 import { type ReactArtifact } from "@/lib/artifact";
+import { downloadFilesAsZip, zipFileName } from "@/lib/zip";
 import { IconButton } from "@/components/artifact/icon-button";
 import { FileTreeToggle } from "@/components/artifact/file-tree-toggle";
 import { DiffToggle } from "@/components/artifact/diff-toggle";
@@ -122,6 +131,30 @@ function SandpackCopyButton() {
       ) : (
         <Copy aria-hidden="true" className="size-4" />
       )}
+    </IconButton>
+  );
+}
+
+/** 把编辑器当前内容(含用户改动)的全部文件打成 zip 下载。 */
+function SandpackDownloadButton({ title }: { title: string }) {
+  const { sandpack } = useSandpack();
+
+  function download() {
+    // visibleFiles = 我们 authored 的文件,排除 Sandpack 注入的模板文件;取实时代码。
+    const map = Object.fromEntries(
+      sandpack.visibleFiles.map((path) => [
+        path,
+        sandpack.files[path]?.code ?? "",
+      ]),
+    );
+    const name = `${zipFileName(title)}.zip`;
+    downloadFilesAsZip(map, name);
+    toast.success(`已下载 ${name}`);
+  }
+
+  return (
+    <IconButton label="下载 zip" onPress={download} tooltip="打包下载 zip">
+      <Download aria-hidden="true" className="size-4" />
     </IconButton>
   );
 }
@@ -278,6 +311,7 @@ export function ReactPanes({
                 {diffActive ? null : (
                   <>
                     <ResetButton originalFiles={files} />
+                    <SandpackDownloadButton title={artifact.title} />
                     <SandpackCopyButton />
                   </>
                 )}

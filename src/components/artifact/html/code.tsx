@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, File } from "lucide-react";
+import { Check, Copy, Download, File } from "lucide-react";
 import { toast } from "@heroui/react";
 
 import type { ArtifactFile } from "@/lib/artifact";
+import { downloadFilesAsZip, zipFileName } from "@/lib/zip";
 import { IconButton } from "@/components/artifact/icon-button";
 import { FileTreeToggle } from "@/components/artifact/file-tree-toggle";
 import { DiffToggle } from "@/components/artifact/diff-toggle";
@@ -41,6 +42,28 @@ function CopyButton({ file }: { file: ArtifactFile }) {
       ) : (
         <Copy aria-hidden="true" className="size-4" />
       )}
+    </IconButton>
+  );
+}
+
+/** 把当前 artifact 的所有文件打成 zip 下载。 */
+function DownloadZipButton({
+  files,
+  title,
+}: {
+  files: ArtifactFile[];
+  title: string;
+}) {
+  function download() {
+    const map = Object.fromEntries(files.map((file) => [file.name, file.code]));
+    const name = `${zipFileName(title)}.zip`;
+    downloadFilesAsZip(map, name);
+    toast.success(`已下载 ${name}`);
+  }
+
+  return (
+    <IconButton label="下载 zip" onPress={download} tooltip="打包下载 zip">
+      <Download aria-hidden="true" className="size-4" />
     </IconButton>
   );
 }
@@ -82,6 +105,7 @@ function FileList({
 
 export function HtmlCode({
   files,
+  title,
   hidden,
   showFileTree,
   onToggleFileTree,
@@ -90,6 +114,7 @@ export function HtmlCode({
   onToggleDiff,
 }: {
   files: ArtifactFile[];
+  title: string;
   hidden: boolean;
   showFileTree: boolean;
   onToggleFileTree: () => void;
@@ -116,7 +141,12 @@ export function HtmlCode({
           </span>
         </div>
         <div className="flex items-center gap-0.5">
-          {diffActive ? null : <CopyButton file={activeFile} />}
+          {diffActive ? null : (
+            <>
+              <DownloadZipButton files={files} title={title} />
+              <CopyButton file={activeFile} />
+            </>
+          )}
           {diff ? (
             <DiffToggle active={diffActive} onToggle={onToggleDiff} />
           ) : null}
