@@ -11,6 +11,10 @@
 | `html`  | 自装配 `<iframe srcDoc>`,无在线沙箱             | 静态 HTML/CSS/JS | 产品介绍页                      |
 | `react` | **Sandpack** 真实打包(npm 依赖、可编辑、热更新) | React + npm 依赖 | React 庆祝按钮(canvas-confetti) |
 
+## 设计定位（为什么这么轻）
+
+本项目对标 **Claude artifact** 那种「对话内嵌、只给关键源码」的体验,而非 Bolt / Lovable 那类「浏览器里的全栈 app builder」。所以「轻」不是简陋,是与目标匹配:工作区只展示 AI 产出的源文件,**刻意不摆** `bun.lock`、`vite.config.ts`、`tsconfig.json`、生成文件这类脚手架——把它们塞进一个聚焦的 artifact 面板反而是噪音、跑偏。react 档也因此只展示作者文件(Sandpack `visibleFiles`),隐藏其打包模板。
+
 ## 技术栈
 
 - **Next.js 16** (App Router) + **React 19**
@@ -39,38 +43,33 @@ src/
 │  ├─ page.tsx                # 渲染 <ChatWorkspace />
 │  └─ globals.css             # 全局样式
 ├─ components/
-│  ├─ chat-workspace.tsx       # 【demo 侧】整体布局:对话 + 分栏 + 喂数据给工作区
-│  └─ artifact/                # 【组件侧】受控、不依赖 demo 状态,可独立接入
-│     ├─ index.ts              # 对外 API:导出 ArtifactWorkspace + 类型
-│     ├─ workspace.tsx         # 受控外壳:props 驱动,顶栏 + 预览/代码切换,按 kind 分发
+│  ├─ chat-workspace.tsx      # demo 侧:整体布局 + 喂数据给工作区
+│  └─ artifact/               # 组件侧:受控、可独立接入(不依赖 demo 状态)
+│     ├─ index.ts             # 对外 API:ArtifactWorkspace + 类型
+│     ├─ workspace.tsx        # 受控外壳:预览/代码切换,按 kind 分发
 │     ├─ html/
-│     │  ├─ preview.tsx        # html 档预览面板:地址栏 + 刷新/新窗口 + iframe
-│     │  └─ code.tsx           # html 档代码面板:文件列表 + 复制 + prism 高亮
+│     │  ├─ preview.tsx       # html 预览:iframe + 刷新/新窗口
+│     │  └─ code.tsx          # html 代码:文件列表 + 复制/下载 + 高亮
 │     ├─ react/
-│     │  └─ panes.tsx          # react 档双面板:Sandpack 打包预览 + 文件树 + 可编辑代码
-│     ├─ diff-view.tsx         # GitHub 风格 unified diff(M/A/D 徽章、红绿行)
-│     ├─ diff-toggle.tsx       # 「查看本次改动 / 返回代码」开关按钮
-│     ├─ file-tree-toggle.tsx  # 文件列表显隐按钮(⌘B)
-│     ├─ streaming-view.tsx    # 流式生成期间的统一视图(代码渐增 + 预览占位)
-│     ├─ code-block.tsx        # 共享的只读 prism 代码块(html 代码视图 + 流式视图)
-│     ├─ quote-selection.tsx   # 划词引用:选区浮出「引用」按钮,抓取文本 + 来源(文件/行号)
-│     ├─ error-boundary.tsx    # 兜住面板渲染崩溃的降级 UI
-│     └─ icon-button.tsx       # 共享的图标按钮(带 Tooltip)
+│     │  └─ panes.tsx         # react 双面板:Sandpack 预览 + 可编辑代码
+│     ├─ diff-view.tsx        # GitHub 风格 unified diff
+│     ├─ diff-toggle.tsx      # 「改动 / 代码」切换
+│     ├─ file-tree-toggle.tsx # 文件列表显隐(⌘B)
+│     ├─ streaming-view.tsx   # 流式生成视图(代码渐增 + 预览占位)
+│     ├─ code-block.tsx       # 只读 prism 代码块(代码 + 流式共用)
+│     ├─ quote-selection.tsx  # 划词引用:抓文本 + 来源(文件/行号)
+│     ├─ error-boundary.tsx   # 面板崩溃降级兜底
+│     └─ icon-button.tsx      # 图标按钮(带 Tooltip)
 ├─ hooks/
-│  ├─ use-artifact.tsx         # 【demo 侧】打开/关闭 + 当前 artifact + 打开意图
-│  ├─ use-simulated-stream.ts  # 【demo 侧】把样例逐字播成流式(真实接入换后端流)
-│  └─ use-is-desktop.ts        # md 断点检测,保证工作区只挂载一份
+│  ├─ use-artifact.tsx        # demo 侧:打开状态 + 当前 artifact + 引用
+│  ├─ use-simulated-stream.ts # demo 侧:把样例逐字播成流式
+│  └─ use-is-desktop.ts       # md 断点检测(工作区只挂一份)
 └─ lib/
-   ├─ artifact.ts              # Artifact 数据模型(html | react 联合,versions 快照)
-   ├─ build-preview.ts         # 把 { html, css, js } 装配成预览文档(html 档)
-   ├─ diff.ts                  # jsdiff 封装:两版文件映射 → 每文件的 diff 行
-   └─ sample/
-      ├─ html-demo.ts          # html 样例(v1 + v2 两个版本)
-      ├─ focus-html/css/js.ts  # html 样例 v1 源码
-      ├─ focus-v2-*.ts         # html 样例 v2 源码(深色模式)
-      ├─ react-demo.ts         # react 样例(v1 + v2 + v3,多目录 + npm 依赖)
-      ├─ stream-demo.ts        # 流式生成 demo 样例(实时时钟,单版本)
-      └─ error-demo.ts         # 错误态 demo 样例(故意留运行时 bug)
+   ├─ artifact.ts             # Artifact 数据模型 + 文件映射工具
+   ├─ build-preview.ts        # 把 html 档文件树装配成预览文档
+   ├─ diff.ts                 # jsdiff 封装:文件映射 → 每文件 diff 行
+   ├─ zip.ts                  # 文件映射打包成 zip 下载
+   └─ sample/                 # 本地样例(html / react / 流式 / 错误态)
 ```
 
 ## 数据模型
