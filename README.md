@@ -81,7 +81,7 @@ artifact 是一个按 `kind` 区分的联合类型,**按版本存全量快照**(
 type HtmlArtifact = {
   kind: "html";
   title: string;
-  versions: Array<{ html: string; css: string; js: string }>;
+  versions: Array<Record<string, string>>; // 文件树:路径 → 代码,如 "index.html"、"css/theme.css"
 };
 
 type ReactArtifact = {
@@ -125,7 +125,7 @@ import { ArtifactWorkspace, type Artifact } from "@/components/artifact";
 - **默认显示干净的最新代码**:diff 是代码工具栏上按需进入的审阅模式;预览永远运行最新版本。
 - react 档的 diff 对比的是版本快照(「AI 本次改动」),与编辑器里的实时编辑无关。
 
-html 档的 `buildPreviewDocument()` 采用**注入式**装配:把 `<style>` 注入到 `</head>` 前、`<script>` 注入到 `</body>` 前(并转义内联脚本里的 `</script>`)。因此 `html` 字段无需自己引用样式/脚本文件。
+html 档是**任意文件树**(路径 → 代码,与 react 档同构,可含子目录),`buildPreviewDocument()` 采用**注入式**装配:入口取 `index.html`,把所有 `.css` 文件各自注入到 `</head>` 前、所有 `.js` 文件各自注入到 `</body>` 前(并转义内联脚本里的 `</script>`)。因此 html 无需自己 `<link>`/`<script>` 引用同档文件。
 
 要换预览内容:html 样例改 [`src/lib/sample/`](src/lib/sample) 下的 `focus-*.ts`;react 样例改 [`react-demo.ts`](src/lib/sample/react-demo.ts)(文件与依赖都在里面)。
 

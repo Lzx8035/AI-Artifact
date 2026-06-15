@@ -2,24 +2,17 @@
 
 import { useEffect, useState } from "react";
 
-import type { Artifact, HtmlFiles, ReactFiles } from "@/lib/artifact";
+import type { Artifact } from "@/lib/artifact";
 
 const STEP_MS = 30;
 const CHARS_PER_STEP = 24;
 
-function htmlRevealed(full: HtmlFiles, budget: number): HtmlFiles {
-  const out: HtmlFiles = { html: "", css: "", js: "" };
-  let left = budget;
-  for (const key of ["html", "css", "js"] as const) {
-    if (left <= 0) break;
-    out[key] = full[key].slice(0, left);
-    left -= full[key].length;
-  }
-  return out;
-}
-
-function reactRevealed(full: ReactFiles, budget: number): ReactFiles {
-  const out: ReactFiles = {};
+/** 按 budget 逐字揭示文件映射:依次填满每个文件的前 N 个字符(两档同构)。 */
+function revealFiles(
+  full: Record<string, string>,
+  budget: number,
+): Record<string, string> {
+  const out: Record<string, string> = {};
   let left = budget;
   for (const [path, code] of Object.entries(full)) {
     if (left <= 0) break;
@@ -30,10 +23,6 @@ function reactRevealed(full: ReactFiles, budget: number): ReactFiles {
 }
 
 function totalChars(artifact: Artifact, index: number): number {
-  if (artifact.kind === "html") {
-    const v = artifact.versions[index];
-    return v.html.length + v.css.length + v.js.length;
-  }
   return Object.values(artifact.versions[index]).reduce(
     (sum, code) => sum + code.length,
     0,
@@ -45,13 +34,8 @@ function partialArtifact(
   index: number,
   revealed: number,
 ): Artifact {
-  if (artifact.kind === "html") {
-    const versions = [...artifact.versions];
-    versions[index] = htmlRevealed(artifact.versions[index], revealed);
-    return { ...artifact, versions, status: "streaming" };
-  }
   const versions = [...artifact.versions];
-  versions[index] = reactRevealed(artifact.versions[index], revealed);
+  versions[index] = revealFiles(artifact.versions[index], revealed);
   return { ...artifact, versions, status: "streaming" };
 }
 

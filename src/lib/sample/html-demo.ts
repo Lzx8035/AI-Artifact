@@ -11,8 +11,12 @@ export const sampleHtmlArtifact: HtmlArtifact = {
   title: "产品介绍页",
   versions: [
     // v1:初始版本
-    { html: focusHtml, css: focusCss, js: focusJs },
+    { "index.html": focusHtml, "styles.css": focusCss, "script.js": focusJs },
     // v2:AI 应用户要求加入深色模式切换
-    { html: focusV2Html, css: focusV2Css, js: focusV2Js },
+    {
+      "index.html": focusV2Html,
+      "styles.css": focusV2Css,
+      "script.js": focusV2Js,
+    },
   ],
 };

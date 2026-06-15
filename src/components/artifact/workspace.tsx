@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FileCode2, X } from "lucide-react";
 
-import { toFileMap, toFiles, type Artifact } from "@/lib/artifact";
+import { toFiles, type Artifact } from "@/lib/artifact";
 import type { Quote } from "@/hooks/use-artifact";
 import { IconButton } from "@/components/artifact/icon-button";
 import { ArtifactErrorBoundary } from "@/components/artifact/error-boundary";
@@ -131,9 +131,10 @@ export function ArtifactWorkspace({
     if (artifact.kind !== "html" || index < 1) {
       return null;
     }
+    // html 档版本本身就是 path → code 映射,直接喂 diff。
     return {
-      oldFiles: toFileMap(artifact.versions[index - 1]),
-      newFiles: toFileMap(artifact.versions[index]),
+      oldFiles: artifact.versions[index - 1],
+      newFiles: artifact.versions[index],
     };
   }, [artifact, index]);
 

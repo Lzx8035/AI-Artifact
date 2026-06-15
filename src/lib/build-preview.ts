@@ -19,13 +19,26 @@ const ERROR_CATCHER = `<script>(function(){
   window.addEventListener("unhandledrejection",function(e){var r=e.reason;report("未处理的 Promise 拒绝: "+(r&&r.message?r.message:r));});
 })();</script>`;
 
+/** 入口 html:优先 index.html,否则取第一个 .html 文件,再没有则空文档。 */
+function entryHtml(files: HtmlFiles): string {
+  if (files["index.html"] !== undefined) {
+    return files["index.html"];
+  }
+  const htmlKey = Object.keys(files)
+    .sort()
+    .find((name) => name.endsWith(".html"));
+  return htmlKey ? files[htmlKey] : "";
+}
+
 /**
- * 把 { html, css, js } 装配成单个可预览的 HTML 文档。
+ * 把 html 档的文件树(路径 → 代码)装配成单个可预览的 HTML 文档。
  *
- * 不依赖 html 里是否引用了样式/脚本——我们自己负责注入,因此比"用正则
- * 剥离已有 <link>/<script>"稳健得多:
- *   - <style> 注入到 </head> 前(没有 </head> 就前置到文档最前)
- *   - <script> 注入到 </body> 前(没有 </body> 就追加到文档末尾)
+ * 沿用"注入式"装配,不依赖 html 里是否引用了样式/脚本——我们自己负责注入,
+ * 因此比"用正则剥离已有 <link>/<script>"稳健得多:
+ *   - 入口取 index.html(见 entryHtml)
+ *   - 所有 .css 文件(按路径排序)各自包成 <style> 注入 </head> 前
+ *   - 所有 .js 文件(按路径排序)各自包成 <script> 注入 </body> 前
+ *   - 没有 </head>/</body> 时分别前置/追加
  *
  * isolated=true 时额外注入严格 CSP,切断外联(见 ISOLATED_CSP)。
  */
@@ -33,21 +46,27 @@ export function buildPreviewDocument(
   files: HtmlFiles,
   options?: { isolated?: boolean },
 ): string {
-  const { html, css, js } = files;
+  const names = Object.keys(files).sort();
 
-  // 防止内联脚本里的 </script> 提前闭合外层 <script> 标签。
-  const safeJs = js.replace(/<\/script/gi, "<\\/script");
+  const styleTags = names
+    .filter((name) => name.endsWith(".css") && files[name])
+    .map((name) => `<style>${files[name]}</style>`)
+    .join("");
+
+  const scriptTags = names
+    .filter((name) => name.endsWith(".js") && files[name])
+    // 防止内联脚本里的 </script> 提前闭合外层 <script> 标签。
+    .map((name) => `<script>${files[name].replace(/<\/script/gi, "<\\/script")}</script>`)
+    .join("");
 
   const cspTag = options?.isolated
     ? `<meta http-equiv="Content-Security-Policy" content="${ISOLATED_CSP}" />`
     : "";
-  const styleTag = css ? `<style>${css}</style>` : "";
-  const scriptTag = safeJs ? `<script>${safeJs}</script>` : "";
 
   // CSP 必须最先生效;错误捕获要早于用户脚本注册;最后才是样式。
-  const headInjection = `${cspTag}${ERROR_CATCHER}${styleTag}`;
+  const headInjection = `${cspTag}${ERROR_CATCHER}${styleTags}`;
 
-  let document = html;
+  let document = entryHtml(files);
 
   if (headInjection) {
     document = document.includes("</head>")
@@ -55,10 +74,10 @@ export function buildPreviewDocument(
       : `${headInjection}${document}`;
   }
 
-  if (scriptTag) {
+  if (scriptTags) {
     document = document.includes("</body>")
-      ? document.replace("</body>", `${scriptTag}</body>`)
-      : `${document}${scriptTag}`;
+      ? document.replace("</body>", `${scriptTags}</body>`)
+      : `${document}${scriptTags}`;
   }
 
   return document;

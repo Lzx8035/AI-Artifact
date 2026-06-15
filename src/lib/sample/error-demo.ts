@@ -6,7 +6,7 @@ export const sampleErrorArtifact: HtmlArtifact = {
   title: "数据看板",
   versions: [
     {
-      html: `<!doctype html>
+      "index.html": `<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
@@ -20,7 +20,7 @@ export const sampleErrorArtifact: HtmlArtifact = {
     </main>
   </body>
 </html>`,
-      css: `body {
+      "styles.css": `body {
   margin: 0;
   font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
   color: #18181b;
@@ -45,7 +45,7 @@ h1 {
   font-size: 16px;
 }`,
       // bug:stats 未定义,加载时即抛 ReferenceError。
-      js: `const total = stats.reduce((sum, n) => sum + n, 0);
+      "script.js": `const total = stats.reduce((sum, n) => sum + n, 0);
 document.querySelector("#total").textContent = total;`,
     },
   ],

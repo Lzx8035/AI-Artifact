@@ -1,8 +1,6 @@
-export type HtmlFiles = {
-  html: string;
-  css: string;
-  js: string;
-};
+/** html 档文件树:相对路径 → 代码(如 "index.html"、"styles.css"、"css/theme.css")。
+ *  与 react 档同构,支持任意数量/层级的文件。 */
+export type HtmlFiles = Record<string, string>;
 
 export type ReactFiles = Record<string, string>;
 
@@ -45,20 +43,11 @@ export function previousVersion<T>(versions: T[]): T | null {
 }
 
 export function toFiles(files: HtmlFiles): ArtifactFile[] {
-  return [
-    { name: "index.html", language: "markup", code: files.html },
-    { name: "styles.css", language: "css", code: files.css },
-    { name: "script.js", language: "javascript", code: files.js },
-  ];
-}
-
-/** html 三元组转统一的 name → code 映射(diff 计算用,与 react 档同构)。 */
-export function toFileMap(files: HtmlFiles): Record<string, string> {
-  return {
-    "index.html": files.html,
-    "styles.css": files.css,
-    "script.js": files.js,
-  };
+  return Object.entries(files).map(([path, code]) => ({
+    name: path.replace(/^\//, ""),
+    language: languageOf(path),
+    code,
+  }));
 }
 
 function languageOf(name: string): ArtifactLanguage {
@@ -69,12 +58,5 @@ function languageOf(name: string): ArtifactLanguage {
 
 /** 取某版本的文件列表(两档同构,供流式视图统一渲染)。 */
 export function versionFiles(artifact: Artifact, index: number): ArtifactFile[] {
-  if (artifact.kind === "html") {
-    return toFiles(artifact.versions[index]);
-  }
-  return Object.entries(artifact.versions[index]).map(([path, code]) => ({
-    name: path.replace(/^\//, ""),
-    language: languageOf(path),
-    code,
-  }));
+  return toFiles(artifact.versions[index]);
 }
