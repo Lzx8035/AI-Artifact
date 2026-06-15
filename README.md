@@ -21,8 +21,6 @@
 - **diff**(jsdiff)— 版本间差异的实时计算(自绘 GitHub 风格 unified 视图)
 - **Tailwind CSS 4**
 
-html 档预览不依赖任何在线沙箱:把 `{ html, css, js }` 装配成单个文档,渲染进 `sandbox="allow-scripts"` 的 `<iframe srcDoc>`。react 档则交给 Sandpack:npm 依赖真实安装打包,代码 Tab 可直接编辑、预览实时热更新。
-
 ## 快速开始
 
 ```bash
@@ -55,6 +53,7 @@ src/
 │     ├─ file-tree-toggle.tsx  # 文件列表显隐按钮(⌘B)
 │     ├─ streaming-view.tsx    # 流式生成期间的统一视图(代码渐增 + 预览占位)
 │     ├─ code-block.tsx        # 共享的只读 prism 代码块(html 代码视图 + 流式视图)
+│     ├─ quote-selection.tsx   # 划词引用:选区浮出「引用」按钮,抓取文本 + 来源(文件/行号)
 │     ├─ error-boundary.tsx    # 兜住面板渲染崩溃的降级 UI
 │     └─ icon-button.tsx       # 共享的图标按钮(带 Tooltip)
 ├─ hooks/
@@ -130,6 +129,10 @@ html 档的 `buildPreviewDocument()` 采用**注入式**装配:把 `<style>` 注
 
 要换预览内容:html 样例改 [`src/lib/sample/`](src/lib/sample) 下的 `focus-*.ts`;react 样例改 [`react-demo.ts`](src/lib/sample/react-demo.ts)(文件与依赖都在里面)。
 
+## 代码引用(Quote)
+
+在「代码」视图或 diff 里拖选一段代码,选区上方会浮出「引用」按钮,点击即把这段代码连同**来源(文件名 + 行号)**塞进输入框上方的引用条——让接入的 AI 知道你指的是哪个文件、哪几行,比纯复制更有上下文。引用是 `{ text, file?, startLine?, endLine? }`(见 [`use-artifact.tsx`](src/hooks/use-artifact.tsx) 的 `Quote`),真实接入时随消息发给后端即可。
+
 ## 预览隔离与隐私
 
 预览不可信的 AI 生成代码时,隔离很重要。本组件提供两档,**由集成方通过 `htmlSandbox` prop 决定**——运行时只在工具栏只读展示当前状态(已隔离 / 未隔离),**不提供切换**:能关闭隔离的 UI 本身就是降级 footgun(可被诱导关掉保护),隔离与否应取决于内容可信度,由接入方在数据/接入层判定:
@@ -143,8 +146,6 @@ html 档的 `buildPreviewDocument()` 采用**注入式**装配:把 `<style>` 注
 
 1. **iframe `sandbox="allow-scripts"`**(两档都有):内容处于 opaque origin,脚本能跑但碰不到我们页面的 DOM / cookie / localStorage,也禁了表单提交、弹窗、顶层跳转。这是「进不来」的一层。
 2. **注入的 CSP `<meta>`**(仅 isolated):由 [`buildPreviewDocument()`](src/lib/build-preview.ts) 在装配文档时往 `<head>` 注入 `default-src 'none'; …`,切断一切网络出口。这是「出不去」的一层。
-
-即:`inline` = iframe sandbox;`isolated` = iframe sandbox **+** CSP。
 
 **为什么只有 html 需要这个开关**:html 档把 AI 代码直接跑在**我们自己页面 origin** 的 iframe 里,所以得我们主动用 CSP 切断它的外联(否则脚本能 fetch 上报、外联打点)。react 档的代码则跑在 Sandpack **独立跨域 iframe**(codesandbox 的打包域)里,浏览器同源策略天然把它和我们的应用隔开,无需我们再加 CSP——代价是代码被发去远程打包(见下面的隐私红线)。
 
@@ -169,9 +170,8 @@ html 档的 `buildPreviewDocument()` 采用**注入式**装配:把 `<style>` 注
 
 ## 说明 / 边界
 
-- 这是一个**前端静态示例**,对话不会发送真实请求。(预览隔离与隐私见上一节。)
-- react 档依赖 Sandpack 的
-  远程打包服务:离线或网络受限时 react 预览会加载失败或很慢(html 档不受影响),首次打包期间预览区会显示加载动画。
+- 这是一个**前端静态示例**,对话不会发送真实请求。
+- react 档依赖 Sandpack 的远程打包服务:离线或网络受限时 react 预览会加载失败或很慢(html 档不受影响),首次打包期间预览区会显示加载动画。
 - `next.config.ts` 中**关闭了 `reactStrictMode`**:开发模式下 StrictMode 的双挂载会与 Sandpack 客户端生命周期产生竞态(iframe 被重复加载后与打包客户端脱钩,表现为预览白屏)。如需重新开启,请先验证 react 预览仍正常。
 
 ## 命令

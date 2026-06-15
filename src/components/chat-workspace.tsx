@@ -10,7 +10,9 @@ import {
   Play,
   Plus,
   Sparkles,
+  TextQuote,
   User,
+  X,
 } from "lucide-react";
 import { Button, ScrollShadow, TextArea, ToastProvider } from "@heroui/react";
 import { Group, Panel, Separator } from "react-resizable-panels";
@@ -86,6 +88,63 @@ function GenerateButton({ artifact }: { artifact: Artifact }) {
       <Play aria-hidden="true" className="size-3.5" />
       观看生成
     </button>
+  );
+}
+
+/** 引用条来源标题:「文件名 · 行 a–b」(单行只显示行 a;缺什么省什么)。 */
+function quoteSourceLabel(quote: {
+  file?: string;
+  startLine?: number;
+  endLine?: number;
+}): string | null {
+  const parts: string[] = [];
+  if (quote.file) {
+    parts.push(quote.file);
+  }
+  if (quote.startLine !== undefined) {
+    const end = quote.endLine ?? quote.startLine;
+    parts.push(
+      end > quote.startLine ? `行 ${quote.startLine}–${end}` : `行 ${quote.startLine}`,
+    );
+  }
+  return parts.length ? parts.join(" · ") : null;
+}
+
+/** 输入框上方的引用条:展示引用片段的来源(文件名/行号)与文本(最多 3 行),× 可清除。 */
+function QuoteChip() {
+  const { quote, clearQuote } = useArtifact();
+
+  if (!quote) {
+    return null;
+  }
+
+  const sourceLabel = quoteSourceLabel(quote);
+
+  return (
+    <div className="mx-auto mb-2 flex max-w-3xl items-start gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2">
+      <TextQuote
+        aria-hidden="true"
+        className="mt-0.5 size-3.5 shrink-0 text-zinc-400"
+      />
+      <div className="min-w-0 flex-1">
+        {sourceLabel ? (
+          <p className="mb-0.5 truncate font-mono text-[11px] font-medium text-zinc-400">
+            {sourceLabel}
+          </p>
+        ) : null}
+        <pre className="overflow-hidden font-mono text-xs leading-5 text-zinc-600 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
+          {quote.text}
+        </pre>
+      </div>
+      <button
+        aria-label="清除引用"
+        className="shrink-0 rounded p-0.5 text-zinc-400 transition-colors hover:bg-zinc-200 hover:text-zinc-700"
+        onClick={clearQuote}
+        type="button"
+      >
+        <X aria-hidden="true" className="size-3.5" />
+      </button>
+    </div>
   );
 }
 
@@ -459,6 +518,7 @@ function ChatPanel() {
       </ScrollShadow>
 
       <div className="shrink-0 border-t border-zinc-100 bg-white px-4 py-4 sm:px-6">
+        <QuoteChip />
         <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border border-zinc-200 bg-white p-2 shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
           <TextArea
             aria-label="消息输入框"
@@ -486,7 +546,7 @@ function ChatPanel() {
 
 function WorkspaceLayout() {
   // demo 侧状态(组件本体不依赖它,这里把值作为 props 喂给受控的 ArtifactWorkspace)。
-  const { artifact, isOpen, openRequest, close } = useArtifact();
+  const { artifact, isOpen, openRequest, close, setQuote } = useArtifact();
   // 工作区(尤其 react kind 的 Sandpack 实例)较重,按断点只挂载一份;
   // ChatPanel 保持双挂载(成本低,且 SSR 渲染稳定)。
   const isDesktop = useIsDesktop();
@@ -511,6 +571,7 @@ function WorkspaceLayout() {
         initialView={openRequest.view}
         key={openRequest.id}
         onClose={close}
+        onQuote={setQuote}
         versionIndex={openRequest.versionIndex}
       />
     ) : null;

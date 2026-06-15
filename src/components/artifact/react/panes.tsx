@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Check, Copy, Globe, Loader2, RefreshCw, RotateCcw } from "lucide-react";
 import { toast } from "@heroui/react";
 import {
@@ -167,6 +167,24 @@ function ActiveFilePath() {
   );
 }
 
+/**
+ * 代码编辑器的引用区:标记 data-quote-source(可划词引用)并写入当前文件名,
+ * 让引用功能解析出来源文件(随切文件实时更新;行号由引用层读 CodeMirror gutter)。
+ */
+function EditorQuoteRegion({ children }: { children: ReactNode }) {
+  const { sandpack } = useSandpack();
+
+  return (
+    <div
+      className="min-h-0 flex-1"
+      data-quote-file={sandpack.activeFile.replace(/^\//, "")}
+      data-quote-source
+    >
+      {children}
+    </div>
+  );
+}
+
 export function ReactPanes({
   artifact,
   versionIndex,
@@ -276,14 +294,14 @@ export function ReactPanes({
                   showFileTree ? "" : "artifact-tree-hidden"
                 }`}
               />
-              <div className="min-h-0 flex-1">
+              <EditorQuoteRegion>
                 <SandpackCodeEditor
                   className="h-full"
                   initMode="immediate"
                   showLineNumbers
                   showTabs={false}
                 />
-              </div>
+              </EditorQuoteRegion>
             </div>
             {diffActive && previousFiles ? (
               <div className="min-h-0 flex-1">

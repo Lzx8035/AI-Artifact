@@ -11,6 +11,17 @@ import {
 
 import type { Artifact } from "@/lib/artifact";
 
+/** 从代码视图引用的片段:文本 + 来源(文件名/起止行),让接入的 AI 知道选的是哪儿。 */
+export type Quote = {
+  text: string;
+  /** 来源文件名;diff/代码视图能解析出则带上,否则省略。 */
+  file?: string;
+  /** 选区起始行号(1 起);解析不到则省略。 */
+  startLine?: number;
+  /** 选区结束行号(1 起);解析不到则省略。 */
+  endLine?: number;
+};
+
 type OpenOptions = {
   /** 打开后落在哪个视图(默认预览)。 */
   view?: "preview" | "code";
@@ -40,6 +51,10 @@ type ArtifactContextValue = {
   openRequest: OpenRequest;
   open: (artifact: Artifact, options?: OpenOptions) => void;
   close: () => void;
+  /** 从代码视图引用的片段(单条,新引用替换);demo 聊天状态。 */
+  quote: Quote | null;
+  setQuote: (quote: Quote) => void;
+  clearQuote: () => void;
 };
 
 const ArtifactContext = createContext<ArtifactContextValue | null>(null);
@@ -78,9 +93,22 @@ export function ArtifactProvider({ children }: { children: ReactNode }) {
     setIsOpen(false);
   }, []);
 
+  const [quote, setQuoteState] = useState<Quote | null>(null);
+  const setQuote = useCallback((next: Quote) => setQuoteState(next), []);
+  const clearQuote = useCallback(() => setQuoteState(null), []);
+
   const value = useMemo(
-    () => ({ artifact, isOpen, openRequest, open, close }),
-    [artifact, isOpen, openRequest, open, close],
+    () => ({
+      artifact,
+      isOpen,
+      openRequest,
+      open,
+      close,
+      quote,
+      setQuote,
+      clearQuote,
+    }),
+    [artifact, isOpen, openRequest, open, close, quote, setQuote, clearQuote],
   );
 
   return (

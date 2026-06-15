@@ -63,7 +63,11 @@ function DiffFileSection({ diff }: { diff: FileDiff }) {
                 : "text-zinc-300";
 
           return (
-            <div className={`flex ${rowClass}`} key={index}>
+            <div
+              className={`flex ${rowClass}`}
+              data-line={line.newNo ?? line.oldNo ?? undefined}
+              key={index}
+            >
               <span className="w-8 shrink-0 select-none pr-1.5 text-right text-zinc-300">
                 {line.oldNo ?? ""}
               </span>
@@ -138,7 +142,11 @@ export function DiffView({
           ))}
         </div>
       ) : null}
-      <div className="min-h-0 flex-1 overflow-y-auto" ref={containerRef}>
+      <div
+        className="min-h-0 flex-1 overflow-y-auto"
+        data-quote-source
+        ref={containerRef}
+      >
         {diffs.map((diff) => (
           <div data-diff-file={diff.name} key={diff.name}>
             <DiffFileSection diff={diff} />

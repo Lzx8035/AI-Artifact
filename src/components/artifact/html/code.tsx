@@ -140,7 +140,11 @@ export function HtmlCode({
             />
           ) : null}
           <div className="min-h-0 flex-1">
-            <CodeBlock code={activeFile.code} language={activeFile.language} />
+            <CodeBlock
+              code={activeFile.code}
+              fileName={activeFile.name}
+              language={activeFile.language}
+            />
           </div>
         </div>
       )}

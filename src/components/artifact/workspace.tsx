@@ -4,8 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { FileCode2, X } from "lucide-react";
 
 import { toFileMap, toFiles, type Artifact } from "@/lib/artifact";
+import type { Quote } from "@/hooks/use-artifact";
 import { IconButton } from "@/components/artifact/icon-button";
 import { ArtifactErrorBoundary } from "@/components/artifact/error-boundary";
+import { QuoteSelectionLayer } from "@/components/artifact/quote-selection";
 import { HtmlPreview } from "@/components/artifact/html/preview";
 import { HtmlCode } from "@/components/artifact/html/code";
 import { ReactPanes } from "@/components/artifact/react/panes";
@@ -62,6 +64,8 @@ export type ArtifactWorkspaceProps = {
   versionIndex?: number;
   /** html 预览的初始隔离模式(默认 inline);isolated 注入严格 CSP 切断外联。 */
   htmlSandbox?: "inline" | "isolated";
+  /** 提供时,代码/diff 视图拖选后浮出「引用」按钮,点击回调选中片段(含来源)。 */
+  onQuote?: (quote: Quote) => void;
 };
 
 /**
@@ -76,6 +80,7 @@ export function ArtifactWorkspace({
   initialShowDiff = false,
   versionIndex,
   htmlSandbox = "inline",
+  onQuote,
 }: ArtifactWorkspaceProps) {
   // 缺省定位到最新版;index>0 时才有可对比的上一版(diff 开关据此显隐)。
   const index = versionIndex ?? artifact.versions.length - 1;
@@ -164,6 +169,7 @@ export function ArtifactWorkspace({
       </header>
 
       <div className="min-h-0 flex-1">
+        {onQuote ? <QuoteSelectionLayer onQuote={onQuote} /> : null}
         <ArtifactErrorBoundary>
         {streaming ? (
           <StreamingView artifact={artifact} versionIndex={index} view={view} />

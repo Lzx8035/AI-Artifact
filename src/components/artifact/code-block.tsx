@@ -8,21 +8,26 @@ import type { ArtifactLanguage } from "@/lib/artifact";
 export function CodeBlock({
   code,
   language,
+  fileName,
 }: {
   code: string;
   language: ArtifactLanguage;
+  /** 提供时写入 data-quote-file,供引用功能解析来源文件名(流式视图不传)。 */
+  fileName?: string;
 }) {
   return (
     <Highlight code={code} language={language} theme={themes.github}>
       {({ className, style, tokens, getLineProps, getTokenProps }) => (
         <pre
           className={`${className} h-full overflow-auto bg-white p-4 font-mono text-xs leading-5`}
+          data-quote-file={fileName}
+          data-quote-source
           style={style}
         >
           {tokens.map((line, lineIndex) => {
             const lineProps = getLineProps({ line });
             return (
-              <div key={lineIndex} {...lineProps}>
+              <div key={lineIndex} {...lineProps} data-line={lineIndex + 1}>
                 <span className="mr-4 inline-block w-6 select-none text-right text-zinc-300">
                   {lineIndex + 1}
                 </span>

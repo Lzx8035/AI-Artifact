@@ -35,6 +35,17 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* prism 给 HTML 标签 token 的类名是 `token tag`,与 HeroUI 的全局组件类 `.tag`
+   撞车——后者带 display:inline-flex(把标签名与属性间的空格 token 当 flex 项折叠掉,
+   渲染成 `<htmllang=`)和 user-select:none(导致标签 token 无法拖选,只能选属性值文字)。
+   prism 的语法色来自 inline style,不依赖这些类,故在代码块内复位即可。 */
+.prism-code .token {
+  display: inline;
+  font-weight: inherit;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* Sandpack(react artifact)尺寸贴合:让预览/编辑器填满面板,去掉自带边框 */
 .artifact-react .sp-wrapper,
 .artifact-react .sp-stack,
